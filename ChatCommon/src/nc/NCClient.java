@@ -1,7 +1,7 @@
 package nc;
 
 import nc.message.NCMessage;
-import nc.message.PacketList;
+import nc.message.PacketType;
 import nc.message.Ping;
 
 import java.io.IOException;
@@ -86,7 +86,7 @@ public class NCClient {
 
     private void processReadPacket(short packetID) {
         try {
-            switch (PacketList.values()[packetID]) {
+            switch (PacketType.values()[packetID]) {
                 case PING:
                     Ping ping = new Ping();
                     ping.fromBytes(readBuffer);

@@ -4,7 +4,6 @@ import nc.exc.PacketCorruptionException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 
 public class ClientJoinRoom implements NCMessage {
     public long clientID;
@@ -29,7 +28,7 @@ public class ClientJoinRoom implements NCMessage {
         if (destination.remaining() < fixedSize() + nameBytes.length)
             return false;
         else {
-            destination.putShort((short) PacketList.CLIENT_JOIN_ROOM.ordinal());
+            destination.putShort((short) PacketType.CLIENT_JOIN_ROOM.ordinal());
             destination.putInt(fixedSize() + nameBytes.length);
             destination.putLong(clientID);
             destination.put(nameBytes);
@@ -40,7 +39,7 @@ public class ClientJoinRoom implements NCMessage {
     @Override
     public void fromBytes(ByteBuffer source) throws IOException {
         short id = source.getShort();
-        if (id != (short) PacketList.CLIENT_JOIN_ROOM.ordinal())
+        if (id != (short) PacketType.CLIENT_JOIN_ROOM.ordinal())
             throw new PacketCorruptionException();
 
         int packetSize = source.getInt();

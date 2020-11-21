@@ -12,7 +12,7 @@ public class Ping implements Serializable, NCMessage {
     @Override
     public boolean toBytes(ByteBuffer destination) {
         if (destination.remaining() >= maximumSize()) {
-            destination.putShort((short) PacketList.PING.ordinal());
+            destination.putShort((short) PacketType.PING.ordinal());
             destination.putInt(maximumSize());
             destination.putLong(time);
             return true;
@@ -24,7 +24,7 @@ public class Ping implements Serializable, NCMessage {
     public void fromBytes(ByteBuffer source) throws IOException {
         short id = source.getShort();
 
-        if (id != (short) PacketList.PING.ordinal())
+        if (id != (short) PacketType.PING.ordinal())
             throw new PacketCorruptionException();
 
         time = source.getLong();

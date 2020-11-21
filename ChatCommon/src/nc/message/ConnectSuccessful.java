@@ -11,7 +11,7 @@ public class ConnectSuccessful implements NCMessage {
         if (destination.remaining() < maximumSize())
             return false;
         else {
-            destination.putShort((short) PacketList.CONNECT_SUCCESSFUL.ordinal());
+            destination.putShort((short) PacketType.CONNECT_SUCCESSFUL.ordinal());
             destination.putInt(maximumSize());
             destination.putLong(sessionID);
         }

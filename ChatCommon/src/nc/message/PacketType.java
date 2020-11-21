@@ -1,6 +1,6 @@
 package nc.message;
 
-public enum PacketList {
+public enum PacketType {
     PING,
     CONNECT_SUCCESSFUL,
     CLIENT_AUTHENTICATE,
