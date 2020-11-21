@@ -7,52 +7,19 @@ import java.nio.ByteBuffer;
 
 public class ClientJoinRoom implements NCMessage {
     public long clientID;
-    private byte[] nameBytes;
+    public byte[] name;
 
     public ClientJoinRoom(long clientID, String name) throws PacketCorruptionException {
-        byte[] nameBytes = name.getBytes(charset);
-
-        if (nameBytes.length > stringMaxSize())
-            throw new PacketCorruptionException();
-
         this.clientID = clientID;
-        this.nameBytes = nameBytes;
-    }
 
-    public String decodeName() {
-        return charset.decode(ByteBuffer.wrap(nameBytes)).toString();
-    }
-
-    @Override
-    public boolean toBytes(ByteBuffer destination) {
-        if (destination.remaining() < fixedSize() + nameBytes.length)
-            return false;
-        else {
-            destination.putShort((short) PacketType.CLIENT_JOIN_ROOM.ordinal());
-            destination.putInt(fixedSize() + nameBytes.length);
-            destination.putLong(clientID);
-            destination.put(nameBytes);
-            return true;
-        }
-    }
-
-    @Override
-    public void fromBytes(ByteBuffer source) throws IOException {
-        short id = source.getShort();
-        if (id != (short) PacketType.CLIENT_JOIN_ROOM.ordinal())
+        this.name = name.getBytes(charset);
+        if (this.name.length > stringMaxSize())
             throw new PacketCorruptionException();
 
-        int packetSize = source.getInt();
-        if (packetSize > maximumSize())
-            throw new PacketCorruptionException();
-
-        clientID = source.getLong();
-        nameBytes = new byte[packetSize - fixedSize()];
-        source.get(nameBytes);
     }
 
-    public int fixedSize() {
-        return 2 + 4 + 8;
+    public String getName() {
+        return new String(name, charset);
     }
 
     public int stringMaxSize() {
@@ -62,5 +29,15 @@ public class ClientJoinRoom implements NCMessage {
     @Override
     public int maximumSize() {
         return 256;
+    }
+
+    @Override
+    public PacketType type() {
+        return PacketType.CLIENT_JOIN_ROOM;
+    }
+
+    @Override
+    public void validatePostRead() throws PacketCorruptionException {
+        NetUtil.Read.Check(name.length <= stringMaxSize());
     }
 }

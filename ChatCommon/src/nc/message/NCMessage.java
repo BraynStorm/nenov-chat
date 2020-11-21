@@ -1,5 +1,7 @@
 package nc.message;
 
+import nc.exc.PacketCorruptionException;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -7,9 +9,27 @@ import java.nio.charset.Charset;
 public interface NCMessage {
     public static final Charset charset = Charset.forName("UTF-8");
 
-    boolean toBytes(ByteBuffer destination);
+    default boolean toBytes(ByteBuffer destination) {
+        return NetUtil.Write.AutoWrite(destination, this);
+    }
 
-    void fromBytes(ByteBuffer source) throws IOException;
+    default void fromBytes(ByteBuffer source) throws IOException {
+        NetUtil.Read.AutoRead(source, this);
+
+    }
 
     int maximumSize();
+
+    default int fixedSize() {
+        return NetUtil.SizeOf(this.getClass());
+    }
+
+    default int size() {
+        return NetUtil.TotalSizeOf(this);
+    }
+
+    PacketType type();
+
+    default void validatePostRead() throws PacketCorruptionException {
+    }
 }

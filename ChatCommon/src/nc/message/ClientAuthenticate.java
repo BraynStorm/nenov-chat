@@ -6,14 +6,16 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class ClientAuthenticate implements NCMessage {
+    public long sessionID;
+    public byte[] email;
+    public byte[] password;
 
-    private long sessionID;
-    private byte[] email;
-    private byte[] password;
+    public ClientAuthenticate() {
+    }
 
     public ClientAuthenticate(long sessionID, String email, String password) throws PacketCorruptionException {
         this.sessionID = sessionID;
-        
+
         this.email = email.getBytes(charset);
         if (this.email.length > maximumEmailSize())
             throw new PacketCorruptionException();
@@ -23,26 +25,19 @@ public class ClientAuthenticate implements NCMessage {
             throw new PacketCorruptionException();
     }
 
-    @Override
-    public boolean toBytes(ByteBuffer destination) {
-
-
+    public String getEmail() {
+        return new String(email, charset);
     }
 
-    @Override
-    public void fromBytes(ByteBuffer source) throws IOException {
-
+    public String getPassword() {
+        return new String(password, charset);
     }
 
-    public int fixedSize() {
-        return 2 + 4 + 4 + 4;
-    }
-
-    public int maximumEmailSize() {
+    public static int maximumEmailSize() {
         return 128;
     }
 
-    public int maximumPasswordSize() {
+    public static int maximumPasswordSize() {
         return 128;
     }
 
@@ -50,4 +45,16 @@ public class ClientAuthenticate implements NCMessage {
     public int maximumSize() {
         return fixedSize() + maximumEmailSize() + maximumPasswordSize();
     }
+
+    @Override
+    public PacketType type() {
+        return PacketType.CLIENT_AUTHENTICATE;
+    }
+
+    @Override
+    public void validatePostRead() throws PacketCorruptionException {
+        NetUtil.Read.Check(email.length <= maximumEmailSize());
+        NetUtil.Read.Check(password.length <= maximumPasswordSize());
+    }
 }
+

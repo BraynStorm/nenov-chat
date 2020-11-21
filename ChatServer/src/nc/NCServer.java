@@ -24,36 +24,30 @@ public class NCServer {
 
     private Map<SelectableChannel, NCClient> clients = new HashMap<>();
     private Set<NCRoom> rooms = new HashSet<>();
-    private NCRoom globalLobby;
 
     public NCServer(int port) throws PortTakenException, IOException {
-        globalLobby = new NCRoom("LOBBY");
-        rooms.add(globalLobby);
-
         try {
             acceptSelector = Selector.open();
             readSelector = Selector.open();
             writeSelector = Selector.open();
         } catch (IOException e) {
-            System.err.println("Can't create Selector!");
+            System.err.println("[NCServer] Can't create Selector!");
             throw e;
         }
 
         serverChannel = ServerSocketChannel.open();
         try {
-            // SSLContext.getInstance("")
-            // SSLEngine e = new SSLEngineImpl("0.0.0.0", port);
             serverChannel.bind(new InetSocketAddress(port));
-
+            System.out.printf("[NCServer] Listening on port %d\n", port);
         } catch (IOException e) {
-            System.err.println("Port is already taken!");
+            System.err.println("[NCServer] Port is already taken!");
             throw new PortTakenException();
         }
 
         try {
             serverChannel.configureBlocking(false);
         } catch (IOException e) {
-            System.err.println("Non-blocking channels are not supported!");
+            System.err.println("[NCServer] Non-blocking channels are not supported!");
             throw e;
         }
 
