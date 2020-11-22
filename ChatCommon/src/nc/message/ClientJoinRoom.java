@@ -12,14 +12,14 @@ public class ClientJoinRoom implements NCMessage {
     public ClientJoinRoom(long clientID, String name) throws PacketCorruptionException {
         this.clientID = clientID;
 
-        this.name = name.getBytes(charset);
+        this.name = name.getBytes(NCMessage.Charset());
         if (this.name.length > stringMaxSize())
             throw new PacketCorruptionException();
 
     }
 
     public String getName() {
-        return new String(name, charset);
+        return new String(name, NCMessage.Charset());
     }
 
     public int stringMaxSize() {

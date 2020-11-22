@@ -1,8 +1,7 @@
 package nc;
 
-import nc.message.NCMessage;
-import nc.message.PacketType;
-import nc.message.Ping;
+import nc.exc.PacketCorruptionException;
+import nc.message.*;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -86,13 +85,21 @@ public class NCClient {
 
     private void processReadPacket(short packetID) {
         try {
+            NCMessage packet;
+
             switch (PacketType.values()[packetID]) {
                 case PING:
-                    Ping ping = new Ping();
-                    ping.fromBytes(readBuffer);
-                    readQueue.add(ping);
+                    packet = new Ping();
                     break;
+                case CLIENT_AUTHENTICATE:
+                    packet = new ClientAuthenticate();
+                    break;
+                default:
+                    throw new PacketCorruptionException();
             }
+
+            packet.fromBytes(readBuffer);
+            readQueue.add(packet);
         } catch (IOException e) {
             close();
         }
@@ -111,7 +118,9 @@ public class NCClient {
 
         Random rng = new Random();
         sessionID = rng.nextLong();
-        clientID = rng.nextLong();
+        clientID = 0;
+
+        sendPacket(new ConnectSuccessful(sessionID));
     }
 
     public long lastInteraction() {
@@ -123,8 +132,8 @@ public class NCClient {
             return channel.getRemoteAddress().toString();
         } catch (IOException e) {
             close();
+            return "<unknown>";
         }
-        return "";
     }
 
     public boolean isTimedOut(long now, long max) {

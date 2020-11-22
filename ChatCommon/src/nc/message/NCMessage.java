@@ -7,7 +7,9 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 public interface NCMessage {
-    public static final Charset charset = Charset.forName("UTF-8");
+    static Charset Charset() {
+        return Charset.forName("UTF-8");
+    }
 
     default boolean toBytes(ByteBuffer destination) {
         return NetUtil.Write.AutoWrite(destination, this);

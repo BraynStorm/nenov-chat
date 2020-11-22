@@ -1,19 +1,15 @@
 package nc;
 
 import nc.exc.PortTakenException;
-import sun.security.ssl.SSLEngineImpl;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.logging.*;
+import java.util.logging.Formatter;
 import java.util.stream.Collectors;
 
 public class NCServer {
@@ -23,41 +19,51 @@ public class NCServer {
     private ServerSocketChannel serverChannel;
 
     private Map<SelectableChannel, NCClient> clients = new HashMap<>();
+    private Map<SelectableChannel, String> remoteAddresses = new HashMap<>();
     private Set<NCRoom> rooms = new HashSet<>();
 
+    private static Logger LOG = Logger.getLogger(NCServer.class.getName());
+
     public NCServer(int port) throws PortTakenException, IOException {
+
         try {
             acceptSelector = Selector.open();
             readSelector = Selector.open();
             writeSelector = Selector.open();
         } catch (IOException e) {
-            System.err.println("[NCServer] Can't create Selector!");
+            LOG.severe("Can't create selector");
             throw e;
         }
 
         serverChannel = ServerSocketChannel.open();
         try {
             serverChannel.bind(new InetSocketAddress(port));
-            System.out.printf("[NCServer] Listening on port %d\n", port);
+
+            LOG.info("Bound on port " + port);
         } catch (IOException e) {
-            System.err.println("[NCServer] Port is already taken!");
+            LOG.severe("Port is already taken!");
             throw new PortTakenException();
         }
 
         try {
             serverChannel.configureBlocking(false);
         } catch (IOException e) {
-            System.err.println("[NCServer] Non-blocking channels are not supported!");
+            LOG.severe("Non-blocking channels are not supported!");
             throw e;
         }
 
     }
 
     public void listen() {
+        LOG.info("Listening");
+        clients.clear();
+        remoteAddresses.clear();
+
         try {
             serverChannel.register(acceptSelector, SelectionKey.OP_ACCEPT);
         } catch (ClosedChannelException e) {
-            e.printStackTrace();
+            LOG.throwing(getClass().getName(), "listen", e);
+            return;
         }
 
         while (true) {
@@ -81,12 +87,12 @@ public class NCServer {
         for (SelectionKey key : acceptSelector.selectedKeys()) {
             try {
                 SocketChannel clientChannel = serverChannel.accept();
+                remoteAddresses.put(clientChannel, clientChannel.getRemoteAddress().toString());
                 acceptClient(clientChannel);
             } catch (IOException e) {
-                System.out.println("Failed to accept client.");
-                e.printStackTrace();
+                LOG.info("Failed to accept client.");
+                close(key.channel());
             }
-
         }
 
         acceptSelector.selectedKeys().clear();
@@ -97,11 +103,13 @@ public class NCServer {
             readSelector.select(1);
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
 
         for (SelectionKey key : readSelector.selectedKeys()) {
             readClient(key);
         }
+        readSelector.selectedKeys().clear();
     }
 
     private void writeClients() {
@@ -109,11 +117,13 @@ public class NCServer {
             writeSelector.select(1);
         } catch (IOException e) {
             e.printStackTrace();
+            return;
         }
 
         for (SelectionKey key : writeSelector.selectedKeys()) {
             writeClient(key);
         }
+        writeSelector.selectedKeys().clear();
     }
 
     private void processClients() {
@@ -141,9 +151,9 @@ public class NCServer {
 
     private void acceptClient(SocketChannel clientChannel) {
         try {
-            System.out.printf("[ACCEPT] %s", clientChannel.getRemoteAddress().toString());
+            System.out.printf("[NCServer] Accept %s\n", clientChannel.getRemoteAddress().toString());
         } catch (IOException e) {
-            System.err.println("Couldn't retrieve remote address for a client. Disconnecting");
+            System.err.println("[NCServer] Couldn't retrieve remote address for a client. Disconnecting");
             close(clientChannel);
         }
         clients.put(clientChannel, new NCClient(clientChannel));
@@ -151,6 +161,7 @@ public class NCServer {
 
     private void close(SelectableChannel channel) {
         try {
+            LOG.info("Close channel " + remoteAddresses.get(channel));
             channel.close();
         } catch (IOException ignored) {
             // Eats the exception
@@ -165,7 +176,6 @@ public class NCServer {
             try {
                 c.read();
             } catch (IOException e) {
-                // e.printStackTrace();
                 close(key.channel());
             }
         }
@@ -179,13 +189,40 @@ public class NCServer {
             try {
                 c.write();
             } catch (IOException e) {
-                // e.printStackTrace();
+                NCServer.LOG.throwing(NCServer.class.getName(), "writeClient", e);
                 close(key.channel());
             }
         }
     }
 
     public static void main(String[] args) {
+        NCServer.LOG.setUseParentHandlers(false);
+
+        Formatter formatter = new Formatter() {
+            final SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss Z");
+
+            @Override
+            public String format(LogRecord record) {
+                return df.format(new Date(record.getMillis())) +
+                        " | " +
+                        record.getLevel().getName() +
+                        " | " +
+                        record.getMessage() +
+                        '\n';
+            }
+        };
+        Handler console = new ConsoleHandler();
+        console.setFormatter(formatter);
+        NCServer.LOG.addHandler(console);
+
+        try {
+            Handler handler = new FileHandler("ncserver.log");
+            handler.setFormatter(formatter);
+            NCServer.LOG.addHandler(handler);
+        } catch (IOException e) {
+            NCServer.LOG.warning(e.toString());
+        }
+
         try {
             NCServer server = new NCServer(5511);
             server.listen();

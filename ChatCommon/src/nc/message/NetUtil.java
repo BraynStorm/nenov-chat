@@ -35,7 +35,14 @@ public class NetUtil {
     public static <T extends NCMessage> int TotalSizeOf(final T instance) {
         int arraySize = Fields(instance.getClass()).mapToInt(f -> {
             try {
-                return f.getType() == byte[].class ? ((byte[]) f.get(instance)).length : 0;
+                if (f.getType() != byte[].class)
+                    return 0;
+
+                byte[] arr = (byte[]) f.get(instance);
+                if (arr == null)
+                    return 0;
+                else
+                    return arr.length;
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
                 return 0;
