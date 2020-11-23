@@ -20,7 +20,9 @@ public interface NCMessage {
 
     }
 
-    int maximumSize();
+    default int maximumSize() {
+        return fixedSize();
+    }
 
     default int fixedSize() {
         return NetUtil.SizeOf(this.getClass());

@@ -1,9 +1,10 @@
 package nc.message;
 
-import nc.exc.PacketCorruptionException;
-
 public class ConnectSuccessful implements NCMessage {
     public long sessionID;
+
+    public ConnectSuccessful() {
+    }
 
     public ConnectSuccessful(long sessionID) {
         this.sessionID = sessionID;

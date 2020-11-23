@@ -2,10 +2,6 @@ package nc.message;
 
 import nc.exc.PacketCorruptionException;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-
 public class ClientAuthenticate implements NCMessage {
     public long sessionID;
     public byte[] email;

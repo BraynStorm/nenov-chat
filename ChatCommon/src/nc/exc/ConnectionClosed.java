@@ -1,4 +1,4 @@
-package nc.exception;
+package nc.exc;
 
 import java.io.IOException;
 

@@ -1,12 +1,13 @@
 package nc;
 
+import nc.exc.ConnectionClosed;
 import nc.exc.PortTakenException;
+import nc.message.ConnectSuccessful;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.*;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.*;
 import java.util.logging.Formatter;
@@ -18,7 +19,7 @@ public class NCServer {
     private Selector writeSelector;
     private ServerSocketChannel serverChannel;
 
-    private Map<SelectableChannel, NCClient> clients = new HashMap<>();
+    private Map<SelectableChannel, NCConnection> clients = new HashMap<>();
     private Map<SelectableChannel, String> remoteAddresses = new HashMap<>();
     private Set<NCRoom> rooms = new HashSet<>();
 
@@ -127,8 +128,8 @@ public class NCServer {
     }
 
     private void processClients() {
-        clients.values().forEach(NCClient::processReadPackets);
-        clients.values().forEach(NCClient::processWritePackets);
+        clients.values().forEach(NCBasicConnection::processReadPackets);
+        clients.values().forEach(NCBasicConnection::processWritePackets);
     }
 
     private void removeDisconnectedClients() {
@@ -141,7 +142,7 @@ public class NCServer {
 
     private void removeTimedOutClients() {
         final long now = System.nanoTime();
-        final long maxTime = 9_000_000_000L; // 9 sec
+        final long maxTime = 999_000_000_000L; // 9 sec
         clients.values().removeAll(
                 clients.values().stream()
                         .filter(client -> client.isTimedOut(now, maxTime))
@@ -156,7 +157,21 @@ public class NCServer {
             System.err.println("[NCServer] Couldn't retrieve remote address for a client. Disconnecting");
             close(clientChannel);
         }
-        clients.put(clientChannel, new NCClient(clientChannel));
+        NCConnection connection = new NCConnection(clientChannel);
+        try {
+            clientChannel.configureBlocking(false);
+            clientChannel.register(readSelector, SelectionKey.OP_READ);
+            clientChannel.register(writeSelector, SelectionKey.OP_WRITE);
+        } catch (IOException e) {
+            close(clientChannel);
+        }
+
+        try {
+            connection.sendPacket(new ConnectSuccessful(connection.getSessionID()));
+            clients.put(clientChannel, connection);
+        } catch (ConnectionClosed connectionClosed) {
+            close(clientChannel);
+        }
     }
 
     private void close(SelectableChannel channel) {
@@ -169,7 +184,7 @@ public class NCServer {
     }
 
     private void readClient(SelectionKey key) {
-        NCClient c = clients.get(key.channel());
+        NCBasicConnection c = clients.get(key.channel());
         if (c == null)
             close(key.channel());
         else {
@@ -182,7 +197,7 @@ public class NCServer {
     }
 
     private void writeClient(SelectionKey key) {
-        NCClient c = clients.get(key.channel());
+        NCBasicConnection c = clients.get(key.channel());
         if (c == null)
             close(key.channel());
         else {

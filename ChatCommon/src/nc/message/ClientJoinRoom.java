@@ -2,12 +2,12 @@ package nc.message;
 
 import nc.exc.PacketCorruptionException;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
 public class ClientJoinRoom implements NCMessage {
     public long clientID;
     public byte[] name;
+
+    public ClientJoinRoom() {
+    }
 
     public ClientJoinRoom(long clientID, String name) throws PacketCorruptionException {
         this.clientID = clientID;

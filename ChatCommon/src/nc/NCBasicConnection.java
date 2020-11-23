@@ -1,5 +1,6 @@
 package nc;
 
+import nc.exc.ConnectionClosed;
 import nc.exc.PacketCorruptionException;
 import nc.message.*;
 
@@ -10,17 +11,17 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.Random;
 
-public class NCClient {
+public class NCBasicConnection {
     private SocketChannel channel;
     private ByteBuffer writeBuffer;
     private ByteBuffer readBuffer;
-    private Queue<NCMessage> writeQueue;
-    private Queue<NCMessage> readQueue;
+    private final Queue<NCMessage> writeQueue = new ArrayDeque<>();
+    private final Queue<NCMessage> readQueue = new ArrayDeque<>();
     private long lastRead;
     private long lastWrite;
 
-    private long sessionID;
-    private long clientID;
+    protected long sessionID;
+    protected long clientID;
 
     private void updateReadTime() {
         lastRead = System.nanoTime();
@@ -33,14 +34,14 @@ public class NCClient {
     void read() throws IOException {
         if (readBuffer.hasRemaining()) {
             int read = channel.read(readBuffer);
-            if (read == 0) {
+            if (read != 0) {
                 updateReadTime();
             }
         }
     }
 
     void write() throws IOException {
-        if (writeBuffer.limit() > 0) {
+        if (writeBuffer.position() > 0) {
             writeBuffer.flip();
             int written = channel.write(writeBuffer);
             writeBuffer.compact();
@@ -56,7 +57,12 @@ public class NCClient {
             int packetSize = readBuffer.getInt(2);
 
             if (readBuffer.remaining() >= packetSize) {
-                processReadPacket(packetID);
+                try {
+                    processReadPacket(packetID);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    break;
+                }
             } else
                 break;
         }
@@ -64,10 +70,13 @@ public class NCClient {
     }
 
     void processWritePackets() {
-        if (writeBuffer.hasRemaining()) {
+        if (!writeBuffer.hasRemaining()) return;
+
+        synchronized (writeQueue) {
             while (writeQueue.peek() != null && writeQueue.peek().maximumSize() <= writeBuffer.remaining()) {
                 NCMessage message = writeQueue.peek();
                 assert message != null;
+                growWriteBuffer(message.maximumSize());
                 if (message.toBytes(writeBuffer))
                     writeQueue.remove();
                 else
@@ -76,64 +85,56 @@ public class NCClient {
         }
     }
 
-    private void close() {
+    public void close() {
         try {
             channel.close();
         } catch (IOException ignored) {
         }
     }
 
-    private void processReadPacket(short packetID) {
-        try {
-            NCMessage packet;
+    private void processReadPacket(short packetID) throws IOException {
+        NCMessage packet;
 
-            switch (PacketType.values()[packetID]) {
-                case PING:
-                    packet = new Ping();
-                    break;
-                case CLIENT_AUTHENTICATE:
-                    packet = new ClientAuthenticate();
-                    break;
-                default:
-                    throw new PacketCorruptionException();
-            }
+        switch (PacketType.values()[packetID]) {
+            case PING:
+                packet = new Ping();
+                break;
+            case CLIENT_AUTHENTICATE:
+                packet = new ClientAuthenticate();
+                break;
+            case CONNECT_SUCCESSFUL:
+                packet = new ConnectSuccessful();
+                break;
+            case CLIENT_SEND_DIRECT_MESSAGE:
+                packet = new ClientSentDirectMessage();
+                break;
+            case CLIENT_JOIN_ROOM:
+                packet = new ClientJoinRoom();
+                break;
+            case CLIENT_AUTHENTICATION_STATUS:
+                packet = new ClientAuthenticationStatus();
+                break;
+            default:
+                throw new PacketCorruptionException();
+        }
 
-            packet.fromBytes(readBuffer);
+        packet.fromBytes(readBuffer);
+
+        synchronized (readQueue) {
             readQueue.add(packet);
-        } catch (IOException e) {
-            close();
         }
     }
 
-    public NCClient(SocketChannel channel) {
+    public NCBasicConnection(SocketChannel channel) {
         this.channel = channel;
         writeBuffer = ByteBuffer.allocate(128);
         readBuffer = ByteBuffer.allocate(128);
         lastRead = System.nanoTime();
         lastWrite = 0;
-
-        writeQueue = new ArrayDeque<>();
-        readQueue = new ArrayDeque<>();
-
-
-        Random rng = new Random();
-        sessionID = rng.nextLong();
-        clientID = 0;
-
-        sendPacket(new ConnectSuccessful(sessionID));
     }
 
     public long lastInteraction() {
         return Math.max(lastRead, lastWrite);
-    }
-
-    public String clientAddress() {
-        try {
-            return channel.getRemoteAddress().toString();
-        } catch (IOException e) {
-            close();
-            return "<unknown>";
-        }
     }
 
     public boolean isTimedOut(long now, long max) {
@@ -150,10 +151,10 @@ public class NCClient {
         }
     }
 
-    public void sendPacket(NCMessage message) {
-        growWriteBuffer(message.maximumSize());
-
-        if (!message.toBytes(writeBuffer)) {
+    public void sendPacket(NCMessage message) throws ConnectionClosed {
+        if (!channel.isOpen())
+            throw new ConnectionClosed();
+        synchronized (writeQueue) {
             writeQueue.add(message);
         }
     }
