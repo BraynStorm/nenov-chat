@@ -134,15 +134,27 @@ public class NCLogin {
                         if (!readQueue.isEmpty()) {
                             NCMessage message = readQueue.peek();
                             System.out.println(message.type().name());
-                            if (message.type() == PacketType.CLIENT_AUTHENTICATION_STATUS) {
-                                connection.clientID = ((ClientAuthenticationStatus) message).clientID;
-                                System.out.println("ClientID " + connection.sessionID);
-                                readQueue.remove();
-                            } else if (message.type() == PacketType.CONNECT_SUCCESSFUL) {
-                                connection.sessionID = ((ConnectSuccessful) message).sessionID;
-                                System.out.println("SessID " + connection.sessionID);
-                                readQueue.remove();
+                            switch (message.type()) {
+                                case PING:
+                                    break;
+                                case CONNECT_SUCCESSFUL:
+                                    connection.sessionID = ((ConnectSuccessful) message).sessionID;
+                                    System.out.println("Connection successful. SESSION_ID=" + connection.sessionID);
+                                    break;
+                                case CLIENT_JOIN_ROOM:
+                                    break;
+                                case CLIENT_SEND_DIRECT_MESSAGE:
+                                    break;
+
+                                case CLIENT_AUTHENTICATE:
+                                    break;
+                                case CLIENT_AUTHENTICATION_STATUS:
+                                    connection.clientID = ((ClientAuthenticationStatus) message).clientID;
+                                    System.out.println("CLIENT_ID=" + connection.sessionID);
+                                    break;
                             }
+                            readQueue.remove(); // pop
+
                         }
                         long now = System.currentTimeMillis();
                         if (now - start > 4000)

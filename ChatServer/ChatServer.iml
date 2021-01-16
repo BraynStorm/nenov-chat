@@ -8,5 +8,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="ChatCommon" />
+    <orderEntry type="library" name="java-sqlite" level="project" />
   </component>
 </module>

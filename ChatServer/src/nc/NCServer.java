@@ -23,9 +23,13 @@ public class NCServer {
     private Map<SelectableChannel, String> remoteAddresses = new HashMap<>();
     private Set<NCRoom> rooms = new HashSet<>();
 
+    private NCDB database;
+
     private static Logger LOG = Logger.getLogger(NCServer.class.getName());
 
     public NCServer(int port) throws PortTakenException, IOException {
+        database = new NCDB();
+        database.connect();
 
         try {
             acceptSelector = Selector.open();
@@ -53,6 +57,10 @@ public class NCServer {
             throw e;
         }
 
+    }
+
+    public void stop() {
+        database.stop();
     }
 
     public void listen() {
@@ -143,20 +151,20 @@ public class NCServer {
     private void removeTimedOutClients() {
         final long now = System.nanoTime();
         final long maxTime = 999_000_000_000L; // 9 sec
-        clients.values().removeAll(
-                clients.values().stream()
-                        .filter(client -> client.isTimedOut(now, maxTime))
-                        .collect(Collectors.toSet())
-        );
+
+        Set<NCConnection> timeout = clients.values().stream()
+                .filter(client -> client.isTimedOut(now, maxTime))
+                .collect(Collectors.toSet());
+        clients.values().removeAll(timeout);
+
+        for (NCConnection connection : timeout) {
+            NCServer.LOG.info("Timeout " + connection.toString());
+        }
     }
 
     private void acceptClient(SocketChannel clientChannel) {
-        try {
-            System.out.printf("[NCServer] Accept %s\n", clientChannel.getRemoteAddress().toString());
-        } catch (IOException e) {
-            System.err.println("[NCServer] Couldn't retrieve remote address for a client. Disconnecting");
-            close(clientChannel);
-        }
+        LOG.info("Accept " + remoteAddresses.get(clientChannel));
+
         NCConnection connection = new NCConnection(clientChannel);
         try {
             clientChannel.configureBlocking(false);
@@ -179,6 +187,7 @@ public class NCServer {
             LOG.info("Close channel " + remoteAddresses.get(channel));
             channel.close();
         } catch (IOException ignored) {
+            LOG.info("Exception during channel.close().");
             // Eats the exception
         }
     }
@@ -204,14 +213,14 @@ public class NCServer {
             try {
                 c.write();
             } catch (IOException e) {
-                NCServer.LOG.throwing(NCServer.class.getName(), "writeClient", e);
+                LOG.throwing(NCServer.class.getName(), "writeClient", e);
                 close(key.channel());
             }
         }
     }
 
     public static void main(String[] args) {
-        NCServer.LOG.setUseParentHandlers(false);
+        LOG.setUseParentHandlers(false);
 
         Formatter formatter = new Formatter() {
             final SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss Z");
@@ -222,20 +231,22 @@ public class NCServer {
                         " | " +
                         record.getLevel().getName() +
                         " | " +
+                        record.getLoggerName() +
+                        " | " +
                         record.getMessage() +
                         '\n';
             }
         };
         Handler console = new ConsoleHandler();
         console.setFormatter(formatter);
-        NCServer.LOG.addHandler(console);
+        LOG.addHandler(console);
 
         try {
             Handler handler = new FileHandler("ncserver.log");
             handler.setFormatter(formatter);
-            NCServer.LOG.addHandler(handler);
+            LOG.addHandler(handler);
         } catch (IOException e) {
-            NCServer.LOG.warning(e.toString());
+            LOG.warning(e.toString());
         }
 
         try {

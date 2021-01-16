@@ -11,6 +11,9 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.Random;
 
+/**
+ *
+ */
 public class NCBasicConnection {
     private SocketChannel channel;
     private ByteBuffer writeBuffer;
@@ -169,5 +172,13 @@ public class NCBasicConnection {
 
     public long getClientID() {
         return clientID;
+    }
+
+    @Override
+    public String toString() {
+        return "NCBasicConnection{" +
+                "sessionID=" + sessionID +
+                ", clientID=" + clientID +
+                '}';
     }
 }

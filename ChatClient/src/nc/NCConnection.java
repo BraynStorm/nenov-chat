@@ -59,9 +59,8 @@ public class NCConnection extends NCBasicConnection {
 
                     i.remove();
                 }
-            } catch (IOException e) {
-                processReadPackets();
-                return;
+            } catch (IOException ignored) {
+                // Eat the exception
             }
 
             processReadPackets();
