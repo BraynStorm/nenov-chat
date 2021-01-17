@@ -27,7 +27,8 @@
       <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
       <RowConstraints maxHeight="196.0" minHeight="0.0" prefHeight="24.0" vgrow="SOMETIMES" />
       <RowConstraints vgrow="SOMETIMES" />
-      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="15.0" minHeight="4.0" prefHeight="4.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="36.0" minHeight="10.0" prefHeight="36.0" vgrow="SOMETIMES" />
       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
    </rowConstraints>
@@ -38,6 +39,7 @@
          <GridPane.margin>
             <Insets top="20.0" />
          </GridPane.margin></Button>
+      <Button fx:id="buttonSignUp" mnemonicParsing="false" onAction="#signUp" prefHeight="42.0" prefWidth="185.0" text="Sign Up" GridPane.columnIndex="1" GridPane.rowIndex="8" />
       <Label text="Email:" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" GridPane.valignment="BOTTOM" GridPane.vgrow="NEVER">
          <padding>
             <Insets left="10.0" />
@@ -50,8 +52,8 @@
          <image>
             <Image url="@images/logo.PNG" />
          </image></ImageView>
-      <ProgressBar fx:id="progressBar" prefWidth="185.0" progress="0.0" GridPane.columnIndex="1" GridPane.rowIndex="9" />
-      <Label fx:id="labelStatus" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="8" GridPane.valignment="BOTTOM">
+      <ProgressBar fx:id="progressBar" prefWidth="185.0" progress="0.0" GridPane.columnIndex="1" GridPane.rowIndex="10" />
+      <Label fx:id="labelStatus" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.hgrow="ALWAYS" GridPane.rowIndex="9" GridPane.valignment="BOTTOM">
          <font>
             <Font size="10.0" />
          </font></Label>

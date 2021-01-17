@@ -11,10 +11,15 @@ public class ClientRegister implements NCMessage {
     public ClientRegister() {
     }
 
-    public ClientRegister(long sessionID, byte[] email, byte[] password) {
+    public ClientRegister(long sessionID, String email, String password) throws PacketCorruptionException {
         this.sessionID = sessionID;
-        this.email = email;
-        this.password = password;
+        this.email = email.getBytes(NCMessage.Charset());
+        this.password = password.getBytes(NCMessage.Charset());
+
+        if (email.length() > maximumEmailSize())
+            throw new PacketCorruptionException();
+        if (password.length() > maximumPasswordSize())
+            throw new PacketCorruptionException();
     }
 
     public long getSessionID() {

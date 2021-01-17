@@ -30,8 +30,8 @@ public class NCConnection extends NCBasicConnection {
             throw new ConnectionClosed();
         }
 
-
         thread = new Thread(this::thread);
+        thread.setDaemon(true);
         thread.start();
     }
 
@@ -40,7 +40,7 @@ public class NCConnection extends NCBasicConnection {
             try {
                 selector.select(100);
             } catch (IOException e) {
-                e.printStackTrace();
+                break;
             }
 
             processWritePackets();
@@ -60,11 +60,14 @@ public class NCConnection extends NCBasicConnection {
                     i.remove();
                 }
             } catch (IOException ignored) {
+                processReadPackets();
+                break;
                 // Eat the exception
             }
 
             processReadPackets();
         }
+        close();
     }
 
     public void setClientID(long clientID) {

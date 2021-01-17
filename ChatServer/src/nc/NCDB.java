@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 public class NCDB {
     private static final Logger LOG = Logger.getLogger(NCDB.class.getName());
+
     static {
         LOG.setParent(Logger.getLogger(NCServer.class.getName()));
     }
@@ -104,13 +105,13 @@ public class NCDB {
         }
 
         try {
+            connection.rollback();
             connection.close();
         } catch (SQLException ignored) {
         }
     }
 
     public long createUser(String email, String password) {
-        long userID = -1;
         try {
             String saltedPassword = password + "5b 82 6b cb fc 71 80 d7 f0 41 7c eb 1c 74 92 fd";
             byte[] hashedPassword = HASHER.digest(saltedPassword.getBytes(StandardCharsets.UTF_8));
@@ -118,21 +119,21 @@ public class NCDB {
             sqlCreateUser.setString(1, email);
             sqlCreateUser.setBytes(2, hashedPassword);
 
-            ResultSet rs = sqlCreateUser.executeQuery();
-            if (rs.next())
-                userID = rs.getLong(1);
-
-            rs.close();
+            if (sqlCreateUser.executeUpdate() == 1) {
+                return findUser(email, password);
+            }
         } catch (SQLException ignored) {
             // Eat
+            LOG.severe("Exception in createUser - " + ignored.getMessage());
         } finally {
             // Care for the passwords.
             try {
                 sqlCreateUser.clearParameters();
             } catch (SQLException ignored) {
+                // Eat
             }
         }
-        return userID;
+        return -1;
     }
 
     public long findUser(String email, String password) {
@@ -183,6 +184,7 @@ public class NCDB {
 
             return sqlMakeFriends.executeUpdate() == 1;
         } catch (SQLException ignored) {
+            // Eat
         }
         return false;
     }

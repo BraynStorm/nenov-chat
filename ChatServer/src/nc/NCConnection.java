@@ -12,6 +12,7 @@ public class NCConnection extends NCBasicConnection {
 
         Random rng = new Random();
         sessionID = rng.nextLong();
-        clientID = 0;
+        clientID = -1;
     }
+
 }

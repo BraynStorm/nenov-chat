@@ -2,7 +2,7 @@ package nc;
 
 import nc.exc.ConnectionClosed;
 import nc.exc.PortTakenException;
-import nc.message.ConnectSuccessful;
+import nc.message.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -24,6 +24,8 @@ public class NCServer {
     private Set<NCRoom> rooms = new HashSet<>();
 
     private NCDB database;
+    private volatile boolean stop;
+    private volatile boolean stopped;
 
     private static Logger LOG = Logger.getLogger(NCServer.class.getName());
 
@@ -60,6 +62,8 @@ public class NCServer {
     }
 
     public void stop() {
+        stop = true;
+        while (!stopped) Thread.onSpinWait();
         database.stop();
     }
 
@@ -75,7 +79,7 @@ public class NCServer {
             return;
         }
 
-        while (true) {
+        while (!stop) {
             acceptClients();
             readClients();
             processClients();
@@ -84,6 +88,9 @@ public class NCServer {
             removeTimedOutClients();
             removeDisconnectedClients();
         }
+
+        stopped = true;
+        stop();
     }
 
     private void acceptClients() {
@@ -136,8 +143,88 @@ public class NCServer {
     }
 
     private void processClients() {
-        clients.values().forEach(NCBasicConnection::processReadPackets);
+        clients.values().forEach(client -> {
+            client.processReadPackets();
+            var readQueue = client.getReadQueue();
+
+            while (!readQueue.isEmpty()) {
+                var packet = readQueue.poll();
+                switch (packet.type()) {
+                    case PING:
+                        try {
+                            client.sendPacket(new Ping());
+                        } catch (ConnectionClosed connectionClosed) {
+                            client.close();
+                        }
+                        break;
+                    case CONNECT_SUCCESSFUL:
+                        break;
+                    case CLIENT_AUTHENTICATE:
+                        handlePacket_ClientAuthenticate(client, (ClientAuthenticate) packet);
+                        break;
+                    case CLIENT_JOIN_ROOM:
+                        break;
+                    case CLIENT_SEND_DIRECT_MESSAGE:
+                        handlePacket_ClientSendDirectMessage(client, (ClientSentDirectMessage) packet);
+                        break;
+                    case CLIENT_AUTHENTICATION_STATUS:
+                        break;
+                    case CLIENT_REGISTER:
+                        handlePacket_ClientRegister(client, (ClientRegister) packet);
+                        break;
+                }
+            }
+        });
+
         clients.values().forEach(NCBasicConnection::processWritePackets);
+    }
+
+    private void handlePacket_ClientAuthenticate(NCConnection client, ClientAuthenticate packet) {
+        if (client.clientID == -1) {
+            var email = packet.getEmail();
+            var password = packet.getPassword();
+
+            long userID = database.findUser(email, password);
+
+            if (userID == -1)
+                LOG.info("ClientAuthenticate - Failed");
+            else
+                LOG.info("ClientAuthenticate - Success");
+            try {
+                client.sendPacket(new ClientAuthenticationStatus(userID));
+            } catch (ConnectionClosed ignored) {
+                client.close();
+            }
+        } else {
+            LOG.warning("ClientAuthenticate received when already authenticated. Culprit: " + client);
+            client.close();
+        }
+    }
+
+    private void handlePacket_ClientSendDirectMessage(NCConnection client, ClientSentDirectMessage packet) {
+
+    }
+
+    private void handlePacket_ClientRegister(NCConnection client, ClientRegister packet) {
+        LOG.info("ClientRegister" + client);
+        if (client.getClientID() != -1) {
+            LOG.warning("Logged-in client tried to Register. Culprit: " + client.toString());
+            client.close();
+            return;
+        }
+
+        client.clientID = database.createUser(packet.getEmail(), packet.getPassword());
+
+        try {
+            client.sendPacket(new ClientRegisterStatus(client.clientID));
+            if (client.clientID == -1) {
+                LOG.info("Register failed. " + client);
+            } else {
+                LOG.info("Register success. " + client);
+            }
+        } catch (ConnectionClosed connectionClosed) {
+            client.close();
+        }
     }
 
     private void removeDisconnectedClients() {
@@ -150,15 +237,16 @@ public class NCServer {
 
     private void removeTimedOutClients() {
         final long now = System.nanoTime();
-        final long maxTime = 999_000_000_000L; // 9 sec
+        final long maxTime = 9_000_000_000L; // 9 sec
 
         Set<NCConnection> timeout = clients.values().stream()
                 .filter(client -> client.isTimedOut(now, maxTime))
                 .collect(Collectors.toSet());
+
         clients.values().removeAll(timeout);
 
         for (NCConnection connection : timeout) {
-            NCServer.LOG.info("Timeout " + connection.toString());
+            LOG.info("Timeout " + connection.toString());
         }
     }
 
@@ -223,7 +311,7 @@ public class NCServer {
         LOG.setUseParentHandlers(false);
 
         Formatter formatter = new Formatter() {
-            final SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss Z");
+            final SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
             @Override
             public String format(LogRecord record) {
@@ -251,6 +339,12 @@ public class NCServer {
 
         try {
             NCServer server = new NCServer(5511);
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                LOG.info("Stopping.");
+                server.stop();
+            }));
+
             server.listen();
         } catch (PortTakenException | IOException e) {
             e.printStackTrace();

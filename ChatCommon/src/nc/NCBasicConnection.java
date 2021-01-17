@@ -10,21 +10,20 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
-/**
- *
- */
 public class NCBasicConnection {
     private SocketChannel channel;
     private ByteBuffer writeBuffer;
     private ByteBuffer readBuffer;
-    private final Queue<NCMessage> writeQueue = new ArrayDeque<>();
-    private final Queue<NCMessage> readQueue = new ArrayDeque<>();
+    private final BlockingQueue<NCMessage> writeQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<NCMessage> readQueue = new LinkedBlockingQueue<>();
     private long lastRead;
     private long lastWrite;
 
-    protected long sessionID;
-    protected long clientID;
+    protected long sessionID = -1;
+    protected long clientID = -1;
 
     private void updateReadTime() {
         lastRead = System.nanoTime();
@@ -40,6 +39,9 @@ public class NCBasicConnection {
             if (read != 0) {
                 updateReadTime();
             }
+
+            if (read == -1)
+                close();
         }
     }
 
@@ -64,6 +66,7 @@ public class NCBasicConnection {
                     processReadPacket(packetID);
                 } catch (IOException e) {
                     e.printStackTrace();
+                    close();
                     break;
                 }
             } else
@@ -73,18 +76,20 @@ public class NCBasicConnection {
     }
 
     void processWritePackets() {
-        if (!writeBuffer.hasRemaining()) return;
+        if (writeBuffer.position() == writeBuffer.capacity()) return;
 
-        synchronized (writeQueue) {
-            while (writeQueue.peek() != null && writeQueue.peek().maximumSize() <= writeBuffer.remaining()) {
-                NCMessage message = writeQueue.peek();
-                assert message != null;
+        while (writeQueue.peek() != null) {
+            NCMessage message = writeQueue.peek();
+            assert message != null;
+
+            if (message.maximumSize() > writeBuffer.capacity())
                 growWriteBuffer(message.maximumSize());
+
+            if (message.size() <= writeBuffer.remaining())
                 if (message.toBytes(writeBuffer))
                     writeQueue.remove();
                 else
                     break;
-            }
         }
     }
 
@@ -93,6 +98,8 @@ public class NCBasicConnection {
             channel.close();
         } catch (IOException ignored) {
         }
+        writeBuffer.clear();
+        readBuffer.clear();
     }
 
     private void processReadPacket(short packetID) throws IOException {
@@ -117,22 +124,26 @@ public class NCBasicConnection {
             case CLIENT_AUTHENTICATION_STATUS:
                 packet = new ClientAuthenticationStatus();
                 break;
+            case CLIENT_REGISTER:
+                packet = new ClientRegister();
+                break;
+            case CLIENT_REGISTER_STATUS:
+                packet = new ClientRegisterStatus();
+                break;
             default:
                 throw new PacketCorruptionException();
         }
 
         packet.fromBytes(readBuffer);
 
-        synchronized (readQueue) {
-            readQueue.add(packet);
-        }
+        readQueue.add(packet);
     }
 
     public NCBasicConnection(SocketChannel channel) {
         this.channel = channel;
         writeBuffer = ByteBuffer.allocate(128);
         readBuffer = ByteBuffer.allocate(128);
-        lastRead = System.nanoTime();
+        updateReadTime();
         lastWrite = 0;
     }
 
@@ -157,12 +168,10 @@ public class NCBasicConnection {
     public void sendPacket(NCMessage message) throws ConnectionClosed {
         if (!channel.isOpen())
             throw new ConnectionClosed();
-        synchronized (writeQueue) {
-            writeQueue.add(message);
-        }
+        writeQueue.add(message);
     }
 
-    public Queue<NCMessage> getReadQueue() {
+    public BlockingQueue<NCMessage> getReadQueue() {
         return readQueue;
     }
 

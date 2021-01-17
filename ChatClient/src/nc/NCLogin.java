@@ -4,16 +4,17 @@ import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
 import nc.exc.PacketCorruptionException;
 import nc.exc.ConnectionClosed;
 import nc.message.*;
-import nc.net.NCConnectionContainer;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.URL;
-import java.util.Queue;
 import java.util.ResourceBundle;
 
 public class NCLogin {
@@ -22,17 +23,54 @@ public class NCLogin {
     @FXML private ProgressBar progressBar;
 
     @FXML private Button buttonLogIn;
+    @FXML private Button buttonSignUp;
     @FXML private Label labelStatus;
 
     @FXML private URL location;
     @FXML private ResourceBundle resources;
 
-    private NCConnection connection;
+    public Task<Void> updaterIsConnected = new Task<Void>() {
+        @Override
+        protected Void call() throws Exception {
+            final NCClientService.State[] lastState = new NCClientService.State[1];
+            var scene = labelStatus.getScene();
+
+            while (isShown()) {
+                Thread.sleep(200);
+
+                Platform.runLater(() -> {
+                    if (!isShown())
+                        return;
+
+                    var s = NCClientApp.client;
+
+                    switch (s.getState()) {
+                        case NOT_CONNECTED:
+                            _startConnectUI();
+                            break;
+                        case BOUND:
+                            _startConnectUI();
+                            break;
+                        case CONNECTED:
+                            if (lastState[0] != NCClientService.State.CONNECTED)
+                                _endConnectUI();
+                            break;
+                        case AUTHENTICATED:
+                            break;
+                    }
+                    lastState[0] = s.getState();
+                });
+            }
+
+            return null;
+        }
+    };
 
     private void _startConnectUI() {
         fieldEmail.setDisable(true);
         fieldPassword.setDisable(true);
         buttonLogIn.setDisable(true);
+        buttonSignUp.setDisable(true);
 
         progressBar.setProgress(-1);
         labelStatus.setText("Connecting");
@@ -42,6 +80,7 @@ public class NCLogin {
         fieldEmail.setDisable(false);
         fieldPassword.setDisable(false);
         buttonLogIn.setDisable(false);
+        buttonSignUp.setDisable(false);
 
         progressBar.setProgress(0);
         labelStatus.setText("Connected");
@@ -51,6 +90,7 @@ public class NCLogin {
         fieldEmail.setDisable(true);
         fieldPassword.setDisable(true);
         buttonLogIn.setDisable(true);
+        buttonSignUp.setDisable(true);
 
         progressBar.setProgress(-1);
         labelStatus.setText("Authenticating");
@@ -60,47 +100,40 @@ public class NCLogin {
         fieldEmail.setDisable(false);
         fieldPassword.setDisable(false);
         buttonLogIn.setDisable(false);
+        buttonSignUp.setDisable(false);
 
         progressBar.setProgress(0);
         labelStatus.setText("Failed");
     }
 
-    private Service<NCConnection> connectionService;
 
     public void connect() {
         _startConnectUI();
+        var t = new Thread(updaterIsConnected);
+        t.setDaemon(true);
+        t.start();
+    }
 
-        connectionService = new Service<NCConnection>() {
-            final InetSocketAddress address = new InetSocketAddress("213.91.183.197", 5511);
-
-            @Override
-            protected Task<NCConnection> createTask() {
-                return new Task<NCConnection>() {
-                    @Override
-                    public NCConnection call() throws ConnectionClosed {
-                        return NCConnectionContainer.connect(address);
-                    }
-                };
-            }
-
-        };
-
-        connectionService.setOnSucceeded(e -> {
-            connection = (NCConnection) e.getSource().getValue();
-            _endConnectUI();
-        });
-        connectionService.setOnFailed(e -> {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Failed to connect to NChat server. Retry?", ButtonType.YES, ButtonType.NO);
-            alert.showAndWait().ifPresent(response -> {
-                if (response == ButtonType.YES) {
-                    connectionService.restart();
-                } else {
-                    Platform.exit();
+    private Service<Boolean> authenticationChecker = new Service<>() {
+        @Override
+        protected Task<Boolean> createTask() {
+            return new Task<>() {
+                @Override
+                protected Boolean call() throws Exception {
+                    for (int i = 0; i < 8; ++i)
+                        if (NCClientApp.client.isAuthenticated())
+                            return true;
+                        else {
+                            Thread.sleep(500);
+                        }
+                    return false;
                 }
-            });
-        });
+            };
+        }
+    };
 
-        connectionService.start();
+    public boolean isShown() {
+        return labelStatus.getScene().getWindow().isShowing();
     }
 
     public void logIn() {
@@ -109,71 +142,76 @@ public class NCLogin {
         String password = fieldPassword.getText();
 
         try {
-            connection.sendPacket(new ClientAuthenticate(connection.getSessionID(), email, password));
+            NCClientApp.client.send(new ClientAuthenticate(NCClientApp.client.sessionID(), email, password));
         } catch (PacketCorruptionException e) {
-            labelStatus.setText("Email or Password too long.");
             _endLoginUI();
+            labelStatus.setText("Email or Password too long");
             return;
         } catch (ConnectionClosed e) {
             _endLoginUI();
-            labelStatus.setText("Disconnected.");
-            connect();
             return;
         }
 
-        Task<Void> authenticateTask = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                long start = System.currentTimeMillis();
-
-                connection.processReadPackets();
-
-                final Queue<NCMessage> readQueue = connection.getReadQueue();
-                while (connection.clientID == 0) {
-                    synchronized (readQueue) {
-                        if (!readQueue.isEmpty()) {
-                            NCMessage message = readQueue.peek();
-                            System.out.println(message.type().name());
-                            switch (message.type()) {
-                                case PING:
-                                    break;
-                                case CONNECT_SUCCESSFUL:
-                                    connection.sessionID = ((ConnectSuccessful) message).sessionID;
-                                    System.out.println("Connection successful. SESSION_ID=" + connection.sessionID);
-                                    break;
-                                case CLIENT_JOIN_ROOM:
-                                    break;
-                                case CLIENT_SEND_DIRECT_MESSAGE:
-                                    break;
-
-                                case CLIENT_AUTHENTICATE:
-                                    break;
-                                case CLIENT_AUTHENTICATION_STATUS:
-                                    connection.clientID = ((ClientAuthenticationStatus) message).clientID;
-                                    System.out.println("CLIENT_ID=" + connection.sessionID);
-                                    break;
-                            }
-                            readQueue.remove(); // pop
-
-                        }
-                        long now = System.currentTimeMillis();
-                        if (now - start > 4000)
-                            break;
-                        Thread.sleep(250);
-                    }
-                }
-
-                if (connection.clientID == 0)
-                    throw new IOException();
-                else
-                    return null;
+        authenticationChecker.setOnSucceeded(e -> {
+            if ((Boolean) e.getSource().getValue()) {
+                onAuthenticationSuccess();
+            } else {
+                _endLoginUI();
+                labelStatus.setText("Email/Password wrong.");
             }
-        };
-
-        authenticateTask.setOnSucceeded(e -> {
-            labelStatus.setText("Success");
         });
-        authenticateTask.setOnFailed(e -> _endLoginUI());
-        new Thread(authenticateTask).start();
+        authenticationChecker.reset();
+        authenticationChecker.start();
+    }
+
+    public void signUp() {
+        _startLoginUI();
+        String email = fieldEmail.getText();
+        String password = fieldPassword.getText();
+
+        try {
+            NCClientApp.client.send(new ClientRegister(NCClientApp.client.sessionID(), email, password));
+        } catch (PacketCorruptionException e) {
+            _endLoginUI();
+            labelStatus.setText("Email or Password too long.");
+            return;
+        } catch (ConnectionClosed e) {
+            _endLoginUI();
+            return;
+        }
+
+        authenticationChecker.setOnSucceeded(e -> {
+            if ((Boolean) e.getSource().getValue()) {
+                onAuthenticationSuccess();
+            } else {
+                _endLoginUI();
+                labelStatus.setText("Email is taken.");
+            }
+        });
+        authenticationChecker.reset();
+        authenticationChecker.start();
+    }
+
+
+    private void onAuthenticationSuccess() {
+        if (!isShown())
+            return;
+        labelStatus.setText("Success");
+
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/nc/ncwindow.fxml"));
+
+        Parent root = null;
+        try {
+            root = loader.load();
+            var stage = new Stage();
+            stage.setTitle("NChat");
+            stage.setScene(new Scene(root));
+            stage.setResizable(false);
+            stage.show();
+
+            labelStatus.getScene().getWindow().hide();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
     }
 }

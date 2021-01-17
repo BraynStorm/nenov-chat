@@ -1,18 +1,17 @@
-package nc.net;
+package nc;
 
 import nc.NCConnection;
 import nc.exc.ConnectionClosed;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketOptions;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
 public class NCConnectionContainer {
-    public NCConnection connection;
-
-    public static NCConnection connect(InetSocketAddress server) throws ConnectionClosed {
+    public static NCConnection connect(InetSocketAddress server, int timeout) throws ConnectionClosed {
         Selector selector = null;
         try {
             selector = Selector.open();
@@ -21,33 +20,49 @@ public class NCConnectionContainer {
             throw new ConnectionClosed();
         }
 
-        SocketChannel channel;
+        SocketChannel channel = null;
         try {
             channel = SocketChannel.open();
             channel.configureBlocking(false);
             channel.register(selector, SelectionKey.OP_CONNECT);
             channel.connect(server);
         } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                selector.close();
+                if(channel != null)
+                    channel.close();
+            } catch (IOException ignored) {
+            }
             throw new ConnectionClosed();
         }
 
         try {
-            selector.select(1000);
+            selector.select(timeout);
         } catch (IOException e) {
+            try {
+                channel.close();
+                selector.close();
+            } catch (IOException ignored) {
+            }
             throw new ConnectionClosed();
         }
 
         for (SelectionKey key : selector.selectedKeys()) {
             if (key.isConnectable()) {
-                channel = (SocketChannel) key.channel();
+                var keyChannel = (SocketChannel) key.channel();
                 try {
-                    if (channel.finishConnect()) {
-                        NCConnection conn = new NCConnection(channel);
+                    if (keyChannel.finishConnect()) {
+                        NCConnection conn = new NCConnection(keyChannel);
                         selector.close();
+                        System.out.println("Connection established");
                         return conn;
                     }
                 } catch (IOException e) {
+                    try {
+                        channel.close();
+                        selector.close();
+                    } catch (IOException ignored) {
+                    }
                     throw new ConnectionClosed();
                 }
             }
