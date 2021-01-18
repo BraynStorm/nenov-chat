@@ -4,7 +4,6 @@ import nc.exc.ConnectionClosed;
 import nc.message.*;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.TimeUnit;
 
 public class NCClientService {
     private final InetSocketAddress address = new InetSocketAddress("213.91.183.197", 5511);
