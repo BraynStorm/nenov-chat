@@ -26,6 +26,6 @@ public class NCFriend {
 
     @Override
     public String toString() {
-        return Long.toString(id);
+        return name;
     }
 }

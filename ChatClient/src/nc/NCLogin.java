@@ -33,7 +33,6 @@ public class NCLogin {
         @Override
         protected Void call() throws Exception {
             final NCClientService.State[] lastState = new NCClientService.State[1];
-            Scene scene = labelStatus.getScene();
 
             while (isShown()) {
                 Thread.sleep(200);
