@@ -158,8 +158,8 @@ public class NCDB {
         return userID;
     }
 
-    public Set<Long> friendsWith(long userID) {
-        Set<Long> friends = new HashSet<>();
+    public List<Long> friendsWith(long userID) {
+        List<Long> friends = new ArrayList<>();
         try {
             sqlFindFriends.setLong(1, userID);
 

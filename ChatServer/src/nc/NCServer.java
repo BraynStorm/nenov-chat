@@ -242,9 +242,9 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
         }
     }
 
-    private void sendFriendList(NCConnection client, List<Long> friends, List<Boolean> online) throws ConnectionClosed {
+    private void sendFriendList(NCConnection client, List<Long> friends, List<Integer> status) throws ConnectionClosed {
         try {
-            client.sendPacket(new ClientUpdateFriendList(friends, online));
+            client.sendPacket(new ClientUpdateFriendList(friends, status));
         } catch (PacketCorruptionException e) {
             // Eat
             LOG.severe("Client has too many friends. Culprit: " + client);
@@ -314,9 +314,9 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
     private void onLogin(NCConnection client) throws ConnectionClosed {
         var friends = database.friendsWith(client.clientID);
 
-        sendFriendList(client, friends);
-
-        for(var f : friends){
+        // sendFriendList(client, friends);
+            sendFriendList(client, );
+        for (var f : friends) {
 
         }
 

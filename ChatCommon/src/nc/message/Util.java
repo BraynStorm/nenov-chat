@@ -11,6 +11,15 @@ public class Util {
         var arr = new long[collection.size()];
         int i = 0;
 
+        for (var element : collection)
+            arr[i++] = element;
+
+        return arr;
+    }
+
+    public static int[] toIntArray(Collection<Integer> collection) {
+        var arr = new int[collection.size()];
+        int i = 0;
 
         for (var element : collection)
             arr[i++] = element;

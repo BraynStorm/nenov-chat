@@ -190,7 +190,7 @@ public class NCBasicConnection {
     public String toString() {
         return "NCBasicConnection{" +
                 "sessionID=" + sessionID +
-                ", clientID=" + clientID +
+                ", senderID=" + clientID +
                 '}';
     }
 }

@@ -6,19 +6,34 @@ import java.util.List;
 
 public class ClientUpdateFriendList extends NCMessage {
     public long[] friends;
-    public boolean[] online;
+    public int[] status;
+
+    public static enum Status {
+        Offline,
+        Online
+    }
 
     public ClientUpdateFriendList() {
     }
 
-    public ClientUpdateFriendList(List<Long> friends, List<Boolean> online) throws PacketCorruptionException {
+    public ClientUpdateFriendList(List<Long> friends, List<Status> status) throws PacketCorruptionException {
         if (friends.size() > maximumFriendsList())
             throw new PacketCorruptionException();
-        if (online.size() > maximumFriendsList())
+        if (status.size() > maximumFriendsList())
             throw new PacketCorruptionException();
 
+        assert status.size() == friends.size();
+
         this.friends = Util.toLongArray(friends);
-        this.online = Util.toBooleanArray(online);
+
+        this.status = new int[status.size()];
+        for (int i = 0; i < status.size(); ++i)
+            this.status[i] = status.get(i).ordinal();
+
+    }
+
+    public Status getStatus(int index) {
+        return Status.values()[status[index]];
     }
 
     public int maximumFriendsList() {
@@ -38,5 +53,7 @@ public class ClientUpdateFriendList extends NCMessage {
     @Override
     public void validatePostRead() throws PacketCorruptionException {
         super.validatePostRead();
+
+        // TODO validate - See constructor.
     }
 }

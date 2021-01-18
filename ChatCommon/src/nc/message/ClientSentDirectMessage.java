@@ -4,14 +4,14 @@ import nc.exc.PacketCorruptionException;
 
 public class ClientSentDirectMessage extends NCMessage {
 
-    public long clientID;
+    public long senderID;
     public byte[] message;
 
     public ClientSentDirectMessage() {
     }
 
-    public ClientSentDirectMessage(long clientID, String message) throws PacketCorruptionException {
-        this.clientID = clientID;
+    public ClientSentDirectMessage(long senderID, String message) throws PacketCorruptionException {
+        this.senderID = senderID;
 
         this.message = message.getBytes(NCMessage.Charset());
         if (this.message.length > messageMaxSize())
