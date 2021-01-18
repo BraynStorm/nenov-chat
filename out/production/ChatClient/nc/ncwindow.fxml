@@ -25,7 +25,7 @@
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
          </rowConstraints>
          <children>
-            <TextField fx:id="chatLine" maxWidth="1.7976931348623157E308" onKeyReleased="#chatLineOnKeyReleased" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.vgrow="NEVER" />
+            <TextField fx:id="chatLine" maxWidth="1.7976931348623157E308" onKeyReleased="#chatLineOnKeyReleased" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.vgrow="NEVER" onKeyPressed="#onKeyPressedEvent" />
             <Button fx:id="send" mnemonicParsing="false" onAction="#onSendAction" prefHeight="25.0" prefWidth="28.0" text="&gt;" GridPane.columnIndex="2" GridPane.rowIndex="1" />
             <TextArea fx:id="chatBox" prefHeight="194.0" prefWidth="160.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS" />
             <Separator orientation="VERTICAL" prefHeight="200.0" GridPane.rowSpan="2" />

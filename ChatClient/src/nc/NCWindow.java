@@ -5,6 +5,8 @@ import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import nc.message.ClientAddFriend;
 import nc.message.ClientRemoveFriend;
 import nc.message.ClientSentDirectMessage;
@@ -112,5 +114,10 @@ public class NCWindow {
 
     public void handleMouseClick(javafx.scene.input.MouseEvent mouseEvent) {
         chatLine.setVisible(true);
+    }
+
+    public void onKeyPressedEvent(KeyEvent keyEvent) {
+        if (keyEvent.getCode().equals(KeyCode.ENTER))
+            onSendAction();
     }
 }
