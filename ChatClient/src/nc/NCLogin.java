@@ -142,7 +142,7 @@ public class NCLogin {
         String password = fieldPassword.getText();
 
         try {
-            NCClientApp.client.send(new ClientAuthenticate(NCClientApp.client.sessionID(), email, password));
+            NCClientApp.client.send(new Authenticate(NCClientApp.client.sessionID(), email, password));
         } catch (PacketCorruptionException e) {
             _endLoginUI();
             labelStatus.setText("Email or Password too long");
@@ -170,7 +170,7 @@ public class NCLogin {
         String password = fieldPassword.getText();
 
         try {
-            NCClientApp.client.send(new ClientRegister(NCClientApp.client.sessionID(), email, password));
+            NCClientApp.client.send(new Register(NCClientApp.client.sessionID(), email, password));
         } catch (PacketCorruptionException e) {
             _endLoginUI();
             labelStatus.setText("Email or Password too long.");

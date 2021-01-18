@@ -109,8 +109,8 @@ public class NCBasicConnection {
             case PING:
                 packet = new Ping();
                 break;
-            case CLIENT_AUTHENTICATE:
-                packet = new ClientAuthenticate();
+            case AUTHENTICATE:
+                packet = new Authenticate();
                 break;
             case CONNECT_SUCCESSFUL:
                 packet = new ConnectSuccessful();
@@ -121,14 +121,14 @@ public class NCBasicConnection {
             case CLIENT_JOIN_ROOM:
                 packet = new ClientJoinRoom();
                 break;
-            case CLIENT_AUTHENTICATION_STATUS:
-                packet = new ClientAuthenticationStatus();
+            case AUTHENTICATION_STATUS:
+                packet = new AuthenticationStatus();
                 break;
-            case CLIENT_REGISTER:
-                packet = new ClientRegister();
+            case REGISTER:
+                packet = new Register();
                 break;
-            case CLIENT_REGISTER_STATUS:
-                packet = new ClientRegisterStatus();
+            case REGISTER_STATUS:
+                packet = new RegisterStatus();
                 break;
             default:
                 throw new PacketCorruptionException();

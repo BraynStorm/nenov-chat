@@ -159,18 +159,18 @@ public class NCServer {
                         break;
                     case CONNECT_SUCCESSFUL:
                         break;
-                    case CLIENT_AUTHENTICATE:
-                        handlePacket_ClientAuthenticate(client, (ClientAuthenticate) packet);
+                    case AUTHENTICATE:
+                        handlePacket_Authenticate(client, (Authenticate) packet);
                         break;
                     case CLIENT_JOIN_ROOM:
                         break;
                     case CLIENT_SEND_DIRECT_MESSAGE:
                         handlePacket_ClientSendDirectMessage(client, (ClientSentDirectMessage) packet);
                         break;
-                    case CLIENT_AUTHENTICATION_STATUS:
+                    case AUTHENTICATION_STATUS:
                         break;
-                    case CLIENT_REGISTER:
-                        handlePacket_ClientRegister(client, (ClientRegister) packet);
+                    case REGISTER:
+                        handlePacket_Register(client, (Register) packet);
                         break;
                 }
             }
@@ -179,7 +179,7 @@ public class NCServer {
         clients.values().forEach(NCBasicConnection::processWritePackets);
     }
 
-    private void handlePacket_ClientAuthenticate(NCConnection client, ClientAuthenticate packet) {
+    private void handlePacket_Authenticate(NCConnection client, Authenticate packet) {
         if (client.clientID == -1) {
             var email = packet.getEmail();
             var password = packet.getPassword();
@@ -187,16 +187,16 @@ public class NCServer {
             long userID = database.findUser(email, password);
 
             if (userID == -1)
-                LOG.info("ClientAuthenticate - Failed");
+                LOG.info("Authenticate - Failed");
             else
-                LOG.info("ClientAuthenticate - Success");
+                LOG.info("Authenticate - Success");
             try {
-                client.sendPacket(new ClientAuthenticationStatus(userID));
+                client.sendPacket(new AuthenticationStatus(userID));
             } catch (ConnectionClosed ignored) {
                 client.close();
             }
         } else {
-            LOG.warning("ClientAuthenticate received when already authenticated. Culprit: " + client);
+            LOG.warning("Authenticate received when already authenticated. Culprit: " + client);
             client.close();
         }
     }
@@ -205,8 +205,8 @@ public class NCServer {
 
     }
 
-    private void handlePacket_ClientRegister(NCConnection client, ClientRegister packet) {
-        LOG.info("ClientRegister" + client);
+    private void handlePacket_Register(NCConnection client, Register packet) {
+        LOG.info("Register" + client);
         if (client.getClientID() != -1) {
             LOG.warning("Logged-in client tried to Register. Culprit: " + client.toString());
             client.close();
@@ -216,7 +216,7 @@ public class NCServer {
         client.clientID = database.createUser(packet.getEmail(), packet.getPassword());
 
         try {
-            client.sendPacket(new ClientRegisterStatus(client.clientID));
+            client.sendPacket(new RegisterStatus(client.clientID));
             if (client.clientID == -1) {
                 LOG.info("Register failed. " + client);
             } else {

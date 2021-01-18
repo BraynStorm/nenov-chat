@@ -52,9 +52,9 @@ public class NCClientService {
     public boolean send(NCMessage message) throws ConnectionClosed {
         boolean doSend = true;
 
-        if (message.type() == PacketType.CLIENT_AUTHENTICATE) {
+        if (message.type() == PacketType.AUTHENTICATE) {
             doSend = (state == State.CONNECTED);
-        } else if (message.type() == PacketType.CLIENT_REGISTER) {
+        } else if (message.type() == PacketType.REGISTER) {
             doSend = (state == State.CONNECTED);
         }
 
@@ -92,10 +92,10 @@ public class NCClientService {
                 }
                 break;
             case CONNECTED:
-                // await CLIENT_AUTHENTICATION_STATUS
+                // await AUTHENTICATION_STATUS
                 packet = connection.getReadQueue().poll();
-                if (packet != null && packet.type() == PacketType.CLIENT_AUTHENTICATION_STATUS) {
-                    connection.clientID = ((ClientAuthenticationStatus) packet).clientID;
+                if (packet != null && packet.type() == PacketType.AUTHENTICATION_STATUS) {
+                    connection.clientID = ((AuthenticationStatus) packet).clientID;
 
                     if (connection.clientID == -1) {
                         System.out.println("Login failed.");
@@ -104,8 +104,8 @@ public class NCClientService {
                         state = State.AUTHENTICATED;
                     }
                 }
-                if (packet != null && packet.type() == PacketType.CLIENT_REGISTER_STATUS) {
-                    connection.clientID = ((ClientRegisterStatus) packet).clientID;
+                if (packet != null && packet.type() == PacketType.REGISTER_STATUS) {
+                    connection.clientID = ((RegisterStatus) packet).clientID;
 
                     if (connection.clientID == -1) {
                         System.out.println("Register failed.");

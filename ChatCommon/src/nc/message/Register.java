@@ -2,24 +2,28 @@ package nc.message;
 
 import nc.exc.PacketCorruptionException;
 
-public class ClientAuthenticate implements NCMessage {
+public class Register implements NCMessage {
     public long sessionID;
+
     public byte[] email;
     public byte[] password;
 
-    public ClientAuthenticate() {
+    public Register() {
     }
 
-    public ClientAuthenticate(long sessionID, String email, String password) throws PacketCorruptionException {
+    public Register(long sessionID, String email, String password) throws PacketCorruptionException {
         this.sessionID = sessionID;
-
         this.email = email.getBytes(NCMessage.Charset());
-        if (this.email.length > maximumEmailSize())
-            throw new PacketCorruptionException();
-
         this.password = password.getBytes(NCMessage.Charset());
-        if (this.password.length > maximumPasswordSize())
+
+        if (email.length() > maximumEmailSize())
             throw new PacketCorruptionException();
+        if (password.length() > maximumPasswordSize())
+            throw new PacketCorruptionException();
+    }
+
+    public long getSessionID() {
+        return sessionID;
     }
 
     public String getEmail() {
@@ -45,7 +49,7 @@ public class ClientAuthenticate implements NCMessage {
 
     @Override
     public PacketType type() {
-        return PacketType.CLIENT_AUTHENTICATE;
+        return PacketType.REGISTER;
     }
 
     @Override
@@ -54,4 +58,3 @@ public class ClientAuthenticate implements NCMessage {
         NetUtil.Read.Check(password.length <= maximumPasswordSize());
     }
 }
-
