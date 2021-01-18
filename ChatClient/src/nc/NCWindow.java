@@ -13,6 +13,7 @@ import nc.message.ClientSentDirectMessage;
 import nc.message.NCMessage;
 
 import java.util.List;
+import java.awt.event.MouseEvent;
 
 public class NCWindow {
     @FXML
@@ -51,9 +52,14 @@ public class NCWindow {
         Thread t = new Thread(timer);
         t.setDaemon(true);
         t.start();
+        if (friendList.getSelectionModel().getSelectedItem() == null)
+            chatLine.setVisible(false);
     }
 
     public void onSendAction() {
+        if (!chatLine.isVisible()) return;
+        friendList.getItems().add(new NCFriend(friendList.getItems().size()));
+        friendList.getItems().add(new NCFriend(friendList.getItems().size()));
         String chatLineText = chatLine.getText();
 
         // check for command
@@ -90,10 +96,16 @@ public class NCWindow {
             } catch (Exception e) {
             }
         }
+
+        chatLine.clear();
     }
 
     public void chatLineOnKeyReleased() {
-
     }
 
+    @FXML
+    public void handleMouseClick(MouseEvent arg0) {
+        chatLine.setVisible(true);
+        ;
+    }
 }
