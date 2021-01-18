@@ -14,7 +14,7 @@ public class ClientSentDirectMessage extends NCMessage {
         this.clientID = clientID;
 
         this.message = message.getBytes(NCMessage.Charset());
-        if (this.message.length > maximumSize())
+        if (this.message.length > messageMaxSize())
             throw new PacketCorruptionException();
     }
 
