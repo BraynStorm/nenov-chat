@@ -1,6 +1,7 @@
 package nc;
 
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -35,10 +36,19 @@ public class NCWindow {
                 Platform.runLater(() -> {
                     // UPDATE friend list
                     List<NCFriend> friends = client.getFriendList();
+                    String name="";
                     if(!friends.isEmpty()){
+                        if(friendList.getSelectionModel().selectedIndexProperty().intValue() != -1 )
+                            name = friendList.getSelectionModel().getSelectedItem().toString();
+
                         friendList.getItems().clear();
                         for(NCFriend friend : friends){
                             friendList.getItems().add(friend);
+                            if(friend.name.equals(name)) {
+                                //friendList.getSelectionModel().select(name);
+                                friendList.setSelectionModel(friendList.getSelectionModel().select(name));
+                                System.out.println("Selecting " + name);
+                            }
                         }
                     }
                 });
