@@ -35,18 +35,21 @@ public class NCWindow {
                 Platform.runLater(() -> {
                     // UPDATE friend list
                     List<NCFriend> friends = client.getFriendList();
-                    if(!friends.isEmpty()){
+                    if (!friends.isEmpty()) {
                         friendList.getItems().clear();
-                        for(NCFriend friend : friends){
+                        for (NCFriend friend : friends) {
                             friendList.getItems().add(friend);
                         }
                     }
                 });
 
+                if (friendList.getSelectionModel() != null) {
+                    NCFriend friend = (NCFriend) friendList.getSelectionModel().getSelectedItem();
 
-               // chatBox.setText(chatBox.getText() + "This is a test\n");
-
-
+                    for (String temp : friend.messages) {
+                        chatBox.setText(chatBox.getText() + temp + "\n");
+                    }
+                }
             }
         }
     };
