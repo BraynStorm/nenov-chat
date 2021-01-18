@@ -252,11 +252,10 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
         return false;
     }
 
-    private void sendFriendList(NCConnection client) throws ConnectionClosed {
+    private void sendFriendList(NCConnection client, List<Long> friendIDs) throws ConnectionClosed {
         LOG.info("Sending friend list to " + client);
         long clientID = client.clientID;
 
-        List<Long> friendIDs = database.friendsWith(clientID);
         List<Boolean> friendStatus = friendIDs.stream()
                 .map(fid -> isClientOnline(clientID))
                 .collect(Collectors.toList());
@@ -264,6 +263,7 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
         List<String> friendEmails = friendIDs.stream()
                 .map(fid -> database.findEmail(fid))
                 .collect(Collectors.toList());
+
 
         try {
             for (int i = 0; i < friendIDs.size(); ++i) {
@@ -354,7 +354,7 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
         if (friendID != -1) {
             database.makeFriends(client.clientID, friendID);
             try {
-                sendFriendList(client);
+                sendFriendList(client, database.friendsWith(client.clientID));
             } catch (ConnectionClosed connectionClosed) {
             }
         }
@@ -368,15 +368,41 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
         if (friendID != -1) {
             database.removeFriends(client.clientID, friendID);
             try {
-                sendFriendList(client);
+                sendFriendList(client, database.friendsWith(client.clientID));
             } catch (ConnectionClosed connectionClosed) {
             }
         }
 
     }
 
+    @Override
+    public void onClientSentDirectMessage(NCConnection sender, ClientSentDirectMessage packet) throws Exception {
+        long senderID = sender.clientID;
+        long receiverID = packet.sender;
+
+        for (NCConnection receiver : clients.values()) {
+            if (receiver.clientID == receiverID) {
+                LOG.info("Relaying message from " + sender + " to " + receiver);
+                receiver.sendPacket(new ClientSentDirectMessage(packet.sender, packet.receiver, packet.getMessage()));
+            }
+        }
+        
+        sender.sendPacket(new ClientSentDirectMessage(packet.sender, packet.receiver, packet.getMessage()));
+    }
+
     private void onLogin(NCConnection client) throws ConnectionClosed {
-        sendFriendList(client);
+        List<Long> friendIDs = database.friendsWith(client.clientID);
+
+        sendFriendList(client, friendIDs);
+    }
+
+    private void updatePresence(NCConnection client, boolean isOnline) {
+        List<Long> friendIDs = database.friendsWith(client.clientID);
+
+//        for(NCConnection otherClient : clients.values()){
+//            if(other)
+//        }
+
     }
 
 
