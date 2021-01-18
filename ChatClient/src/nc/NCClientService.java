@@ -4,12 +4,19 @@ import nc.exc.ConnectionClosed;
 import nc.message.*;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 
-public class NCClientService implements NCMessageVisitor {
+public class NCClientService implements NCMessageVisitor<NCConnection> {
     private final InetSocketAddress address = new InetSocketAddress("213.91.183.197", 5511);
 
     private State state = State.NOT_CONNECTED;
     private NCConnection connection;
+    private List<NCFriend> friendList = new ArrayList<>();
+
+    public List<NCFriend> getFriendList() {
+        return friendList;
+    }
 
     public long sessionID() throws ConnectionClosed {
         if (!isConnected())
@@ -71,6 +78,7 @@ public class NCClientService implements NCMessageVisitor {
                 } catch (ConnectionClosed connectionClosed) {
                     state = State.NOT_CONNECTED;
                     connection = null;
+                    friendList.clear();
                 }
             }
         }
@@ -116,8 +124,13 @@ public class NCClientService implements NCMessageVisitor {
                 }
                 break;
             case AUTHENTICATED:
-                // Expect all messages
-
+                packet = connection.getReadQueue().poll();
+                if (packet != null)
+                    try {
+                        NCMessageVisitor.visit(this, connection, packet);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 break;
         }
     }
@@ -133,4 +146,18 @@ public class NCClientService implements NCMessageVisitor {
         }
     }
 
+    @Override
+    public void onClientUpdateFriendList(NCConnection client, ClientUpdateFriendList packet) throws Exception {
+        for (int i = 0; i < packet.status.length; ++i) {
+            long friendID = packet.friends[i];
+            ClientUpdateFriendList.Status status = packet.getStatus(i);
+
+            friendList.add(new NCFriend(friendID));
+        }
+    }
+
+    @Override
+    public void onClientResponseClientName(NCConnection client, ClientResponseClientName packet) throws Exception {
+
+    }
 }

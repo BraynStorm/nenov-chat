@@ -242,7 +242,7 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
         }
     }
 
-    private void sendFriendList(NCConnection client, List<Long> friends, List<Integer> status) throws ConnectionClosed {
+    private void sendFriendList(NCConnection client, List<Long> friends, List<ClientUpdateFriendList.Status> status) throws ConnectionClosed {
         try {
             client.sendPacket(new ClientUpdateFriendList(friends, status));
         } catch (PacketCorruptionException e) {
@@ -311,14 +311,22 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
         }
     }
 
+    @Override
+    public void onClientRequestClientName(NCConnection client, ClientRequestClientName packet) throws Exception {
+        String email = database.findEmail(packet.clientID);
+
+        if (email == null) {
+            client.close();
+            return;
+        }
+
+        client.sendPacket(new ClientResponseClientName(email));
+    }
+
     private void onLogin(NCConnection client) throws ConnectionClosed {
         var friends = database.friendsWith(client.clientID);
 
         // sendFriendList(client, friends);
-            sendFriendList(client, );
-        for (var f : friends) {
-
-        }
 
     }
 

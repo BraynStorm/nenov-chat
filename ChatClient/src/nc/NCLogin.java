@@ -209,6 +209,9 @@ public class NCLogin {
             stage.setResizable(false);
             stage.show();
 
+            NCWindow window = loader.getController();
+            stage.setOnShown(e -> window.onShow());
+
             labelStatus.getScene().getWindow().hide();
         } catch (IOException e1) {
             e1.printStackTrace();

@@ -1,5 +1,7 @@
 package nc;
 
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
@@ -11,6 +13,26 @@ public class NCWindow {
     @FXML private ListView friendList;
     @FXML private TextField chatLine;
     @FXML private TextArea chatBox;
+
+    private Task<Void> timer = new Task<Void>() {
+        @Override
+        protected Void call() throws Exception {
+            while (true) {
+                var client = NCClientApp.client;
+                Thread.sleep(500);
+
+                Platform.runLater(() -> {
+                    // UPDATE friend list
+                });
+            }
+        }
+    };
+
+    public void onShow() {
+        var t = new Thread(timer);
+        t.setDaemon(true);
+        t.start();
+    }
 
     public void onSendAction() {
         friendList.getItems().add(new NCFriend(friendList.getItems().size()));

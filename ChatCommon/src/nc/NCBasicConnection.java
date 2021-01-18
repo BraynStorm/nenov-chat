@@ -4,6 +4,7 @@ import nc.exc.ConnectionClosed;
 import nc.exc.PacketCorruptionException;
 import nc.message.*;
 
+import java.awt.image.ReplicateScaleFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -132,6 +133,12 @@ public class NCBasicConnection {
                 break;
             case CLIENT_USER_CHANGED_STATUS:
                 packet = new ClientUserChangedStatus();
+                break;
+            case CLIENT_REQUEST_CLIENT_NAME:
+                packet = new ClientRequestClientName();
+                break;
+            case CLIENT_RESPONSE_CLIENT_NAME:
+                packet = new ClientResponseClientName();
                 break;
             default:
                 throw new PacketCorruptionException();

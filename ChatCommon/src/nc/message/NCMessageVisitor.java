@@ -32,6 +32,15 @@ public interface NCMessageVisitor<Conn extends NCBasicConnection> {
             case CLIENT_UPDATE_FRIEND_LIST:
                 visitor.onClientUpdateFriendList(client, (ClientUpdateFriendList) packet);
                 break;
+            case CLIENT_USER_CHANGED_STATUS:
+                visitor.onClientUserChangedStatus(client, (ClientUserChangedStatus) packet);
+                break;
+            case CLIENT_REQUEST_CLIENT_NAME:
+                visitor.onClientRequestClientName(client, (ClientRequestClientName) packet);
+                break;
+            case CLIENT_RESPONSE_CLIENT_NAME:
+                visitor.onClientResponseClientName(client, (ClientResponseClientName) packet);
+                break;
         }
     }
 
@@ -60,6 +69,15 @@ public interface NCMessageVisitor<Conn extends NCBasicConnection> {
     }
 
     default void onRegisterStatus(Conn client, RegisterStatus packet) throws Exception {
+    }
+
+    default void onClientUserChangedStatus(Conn client, ClientUserChangedStatus packet) throws Exception {
+    }
+
+    default void onClientRequestClientName(Conn client, ClientRequestClientName packet) throws Exception {
+    }
+
+    default void onClientResponseClientName(Conn client, ClientResponseClientName packet) throws Exception {
     }
 
 }

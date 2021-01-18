@@ -5,9 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 
 public class NCDB {
@@ -68,6 +66,7 @@ public class NCDB {
     private PreparedStatement sqlMakeFriends;
     private PreparedStatement sqlRemoveFriends;
     private PreparedStatement sqlSendDirectMessage;
+    private PreparedStatement sqlFindEmail;
 
     public void connect() {
         connection = null;
@@ -215,6 +214,23 @@ public class NCDB {
         return false;
     }
 
+    public String findEmail(long userID) {
+        String result = null;
+        try {
+            sqlFindEmail.setLong(1, userID);
+
+            var rs = sqlFindEmail.executeQuery();
+            if (rs.next()) {
+                result = rs.getString(1);
+            }
+            rs.close();
+        } catch (SQLException ignored) {
+            // Eat
+        }
+        return result;
+    }
+
+
     private void stop(PreparedStatement ps) {
         try {
             ps.close();
@@ -228,6 +244,7 @@ public class NCDB {
         sqlFindFriends = connection.prepareStatement("SELECT * FROM nc_friend WHERE user_a = ?1 OR user_b = ?1;");
         sqlMakeFriends = connection.prepareStatement("INSERT INTO nc_friend (user_a, user_b) VALUES (?, ?);");
         sqlRemoveFriends = connection.prepareStatement("DELETE FROM nc_friend WHERE (user_a = ?1 AND user_b = ?2) OR (user_a = ?2 AND user_b = ?1);");
+        sqlFindEmail = connection.prepareStatement("SELECT email FROM nc_user WHERE id = ?;");
     }
 
 
