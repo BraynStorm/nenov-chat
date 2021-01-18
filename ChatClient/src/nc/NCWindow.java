@@ -23,36 +23,28 @@ public class NCWindow {
     @FXML
     private TextArea chatBox;
 
-    String name="";
-
     private Task<Void> timer = new Task<Void>() {
         @Override
         protected Void call() throws Exception {
             while (true) {
                 NCClientService client = NCClientApp.client;
-                Thread.sleep(2500);
+                Thread.sleep(250);
 
                 Platform.runLater(() -> {
                     // UPDATE friend list
-                    friendList.getItems().clear();
                     List<NCFriend> friends = client.getFriendList();
+                    NCFriend selected = (NCFriend) friendList.getSelectionModel().getSelectedItem();
 
-                    if (!friends.isEmpty()) {
-                        for (NCFriend friend : friends) {
-                            friendList.getItems().add(friend);
-                            if(friend.name.equals(name)) {
-                                friendList.scrollTo(name);
-                                friendList.getSelectionModel().select(name);
-                                System.out.println("Selecting " + name);
-                            }
-                        }
-
-                    }
+                    friendList.getItems().clear();
+                    friendList.getItems().addAll(friends);
+                    if (selected != null)
+                        friendList.getSelectionModel().select(selected);
                 });
 
                 if (friendList.getSelectionModel() != null) {
                     NCFriend friend = (NCFriend) friendList.getSelectionModel().getSelectedItem();
-                    if (friend != null)
+                    if (friend != null) {
+                        chatBox.clear();
                         for (NCChatMessage s : friend.messages) {
                             NCChatMessage.Direct msg = (NCChatMessage.Direct) s;
                             String senderName = NCClientApp.client.getName(msg.getSender());
@@ -64,6 +56,7 @@ public class NCWindow {
                                 ;
                             }
                         }
+                    }
                 }
             }
         }
@@ -119,6 +112,5 @@ public class NCWindow {
 
     public void handleMouseClick(javafx.scene.input.MouseEvent mouseEvent) {
         chatLine.setVisible(true);
-        name = ((NCFriend) friendList.getSelectionModel().getSelectedItem()).name;
     }
 }
