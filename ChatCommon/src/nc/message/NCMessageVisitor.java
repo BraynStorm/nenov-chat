@@ -41,6 +41,12 @@ public interface NCMessageVisitor<Conn extends NCBasicConnection> {
             case CLIENT_RESPONSE_CLIENT_NAME:
                 visitor.onClientResponseClientName(client, (ClientResponseClientName) packet);
                 break;
+            case CLIENT_ADD_FRIEND:
+                visitor.onClientAddFriend(client, (ClientAddFriend) packet);
+                break;
+            case CLIENT_REMOVE_FRIEND:
+                visitor.onClientRemoveFriend(client, (ClientRemoveFriend) packet);
+                break;
         }
     }
 
@@ -79,5 +85,12 @@ public interface NCMessageVisitor<Conn extends NCBasicConnection> {
 
     default void onClientResponseClientName(Conn client, ClientResponseClientName packet) throws Exception {
     }
+
+    default void onClientAddFriend(Conn client, ClientAddFriend packet) {
+    }
+
+    default void onClientRemoveFriend(Conn client, ClientRemoveFriend packet) {
+    }
+
 
 }

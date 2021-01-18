@@ -140,6 +140,12 @@ public class NCBasicConnection {
             case CLIENT_RESPONSE_CLIENT_NAME:
                 packet = new ClientResponseClientName();
                 break;
+            case CLIENT_ADD_FRIEND:
+                packet = new ClientAddFriend();
+                break;
+            case CLIENT_REMOVE_FRIEND:
+                packet = new ClientRemoveFriend();
+                break;
             default:
                 throw new PacketCorruptionException();
         }
