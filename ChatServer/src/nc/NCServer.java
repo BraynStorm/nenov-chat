@@ -393,7 +393,7 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
         boolean friend = false;
         for (NCConnection receiver : clients.values()) {
             if (receiver.clientID == packet.receiver) {
-                LOG.info("Relaying message from " + sender + " to " + receiver);
+                LOG.info("Relaying message from " + sender + " to " + receiver + ". Content: " + packet.getMessage());
                 receiver.sendPacket(new ClientSentDirectMessage(packet.sender, packet.receiver, packet.getMessage()));
                 friend = true;
                 break;
