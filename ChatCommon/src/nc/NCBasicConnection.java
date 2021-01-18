@@ -7,6 +7,7 @@ import nc.message.*;
 import java.awt.image.ReplicateScaleFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -56,8 +57,8 @@ public class NCBasicConnection {
     void processReadPackets() {
         readBuffer.flip();
         while (readBuffer.remaining() >= 6) {
-            short packetID = readBuffer.getShort(0);
-            int packetSize = readBuffer.getInt(2);
+            short packetID = readBuffer.getShort(readBuffer.position() + 0);
+            int packetSize = readBuffer.getInt(readBuffer.position() + 2);
 
             if (readBuffer.remaining() >= packetSize) {
                 try {
@@ -98,6 +99,8 @@ public class NCBasicConnection {
         }
         writeBuffer.clear();
         readBuffer.clear();
+        readQueue.clear();
+        writeQueue.clear();
     }
 
     private void processReadPacket(short packetID) throws IOException {
@@ -154,8 +157,8 @@ public class NCBasicConnection {
 
     public NCBasicConnection(SocketChannel channel) {
         this.channel = channel;
-        writeBuffer = ByteBuffer.allocate(128);
-        readBuffer = ByteBuffer.allocate(128);
+        writeBuffer = ByteBuffer.allocate(128).order(ByteOrder.LITTLE_ENDIAN);
+        readBuffer = ByteBuffer.allocate(128).order(ByteOrder.LITTLE_ENDIAN);
         updateReadTime();
         lastWrite = 0;
     }
@@ -170,7 +173,7 @@ public class NCBasicConnection {
 
     private void growWriteBuffer(int newCap) {
         if (newCap > writeBuffer.capacity()) {
-            ByteBuffer newWriteBuffer = ByteBuffer.allocate(newCap);
+            ByteBuffer newWriteBuffer = ByteBuffer.allocate(newCap).order(ByteOrder.LITTLE_ENDIAN);
 
             writeBuffer.flip();
             newWriteBuffer.put(writeBuffer);

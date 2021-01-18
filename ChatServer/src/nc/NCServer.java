@@ -155,6 +155,7 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
                 try {
                     NCMessageVisitor.visit(this, client, packet);
                 } catch (Exception e) {
+                    e.printStackTrace();
                     client.close();
                 }
             }
@@ -291,6 +292,7 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
             String password = packet.getPassword();
 
             long userID = database.findUser(email, password);
+            client.clientID= userID;
 
             try {
                 client.sendPacket(new AuthenticationStatus(userID));
@@ -360,10 +362,8 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
     }
 
     private void onLogin(NCConnection client) throws ConnectionClosed {
-        List<Long> friends = database.friendsWith(client.clientID);
-
-        // sendFriendList(client, friends);
-
+        LOG.info("Sending friend list to " + client);
+        sendFriendList(client);
     }
 
 
