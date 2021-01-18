@@ -7,12 +7,19 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import nc.message.ClientAddFriend;
+import nc.message.ClientRemoveFriend;
+import nc.message.NCMessage;
 
 public class NCWindow {
-    @FXML private Button send;
-    @FXML private ListView friendList;
-    @FXML private TextField chatLine;
-    @FXML private TextArea chatBox;
+    @FXML
+    private Button send;
+    @FXML
+    private ListView friendList;
+    @FXML
+    private TextField chatLine;
+    @FXML
+    private TextArea chatBox;
 
     private Task<Void> timer = new Task<Void>() {
         @Override
@@ -35,26 +42,30 @@ public class NCWindow {
     }
 
     public void onSendAction() {
-       // friendList.getItems().add(new NCFriend(friendList.getItems().size()));
+        // friendList.getItems().add(new NCFriend(friendList.getItems().size()));
 
         String chatLineText = chatLine.getText();
 
         // check for command
         // extract
 
-        if(chatLineText.contains(" ")){
+        if (chatLineText.contains(" ")) {
             String cmd = chatLineText.substring(0, chatLineText.indexOf(" "));
-            String frName = chatLineText.substring(chatLineText.lastIndexOf(" ")+1);
+            String frName = chatLineText.substring(chatLineText.lastIndexOf(" ") + 1);
 
             // add friend cmd
-            if(cmd.toLowerCase().equals("//add"))
-            {
-                
+            if (cmd.toLowerCase().equals("//add")) {
+                try {
+                    NCClientApp.client.send(new ClientAddFriend(frName));
+                } catch (Exception e) {
+                }
             }
             // remove friend
-            else if (cmd.toLowerCase().equals("//rmv"))
-            {
-
+            else if (cmd.toLowerCase().equals("//rmv")) {
+                try {
+                    NCClientApp.client.send(new ClientRemoveFriend(frName));
+                } catch (Exception e) {
+                }
             }
         }
     }
