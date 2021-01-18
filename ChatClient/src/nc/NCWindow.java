@@ -30,7 +30,7 @@ public class NCWindow {
         protected Void call() throws Exception {
             while (true) {
                 NCClientService client = NCClientApp.client;
-                Thread.sleep(500);
+                Thread.sleep(2500);
 
                 Platform.runLater(() -> {
                     // UPDATE friend list
@@ -49,14 +49,6 @@ public class NCWindow {
 
                     }
                 });
-
-//                if (friendList.getSelectionModel() != null) {
-//                    NCFriend friend = (NCFriend) friendList.getSelectionModel().getSelectedItem();
-//
-//                    for (String s : friend.messages) {
-//                        chatBox.setText(chatBox.getText() + friend.name + " -> " + s + "\n");
-//                    }
-//                }
             }
         }
     };
@@ -70,8 +62,7 @@ public class NCWindow {
     }
 
     public void onSendAction() {
-        if (!chatLine.isVisible() || chatLine.getText().isEmpty()) return;
-        friendList.getItems().add(new NCFriend(friendList.getItems().size()));
+        if (!chatLine.isVisible()) return;
         String chatLineText = chatLine.getText();
 
         // check for command
@@ -99,7 +90,7 @@ public class NCWindow {
             try {
                 NCFriend friend = (NCFriend) friendList.getSelectionModel().getSelectedItem();
                 if (friend != null)
-                    NCClientApp.client.send(new ClientSentDirectMessage(friend.id, chatLineText));
+                    NCClientApp.client.send(new ClientSentDirectMessage(NCClientApp.client.clientID(), friend.id, chatLineText));
             } catch (Exception e) {
             }
         }

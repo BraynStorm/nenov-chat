@@ -11,8 +11,9 @@ public abstract class NCChatMessage {
         private long receiver;
         private String content;
 
-        public Direct(long sender, String content) {
+        public Direct(long sender, long receiver, String content) {
             this.sender = sender;
+            this.receiver = receiver;
             this.content = content;
         }
 

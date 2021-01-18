@@ -6,7 +6,6 @@ import nc.message.*;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class NCClientService implements NCMessageVisitor<NCConnection> {
     private final InetSocketAddress address = new InetSocketAddress("213.91.183.197", 5511);
@@ -20,9 +19,15 @@ public class NCClientService implements NCMessageVisitor<NCConnection> {
     }
 
     public long sessionID() throws ConnectionClosed {
-        if (!isConnected())
+        if (!isConnected() && !isAuthenticated())
             throw new ConnectionClosed();
         return connection.sessionID;
+    }
+
+    public long clientID() throws ConnectionClosed {
+        if (!isAuthenticated())
+            throw new ConnectionClosed();
+        return connection.clientID;
     }
 
     public enum State {
@@ -163,5 +168,20 @@ public class NCClientService implements NCMessageVisitor<NCConnection> {
 
         if (!found)
             friends.add(new NCFriend(packet.userID, packet.getEmail(), packet.online));
+    }
+
+    @Override
+    public void onClientSentDirectMessage(NCConnection receiver, ClientSentDirectMessage packet) throws Exception {
+        // receive message
+        System.out.print("New message from ");
+        for (NCFriend f : NCClientApp.client.friendList) {
+            if (f.id == packet.sender || f.id == packet.receiver) {
+                System.out.println(packet);
+                f.messages.add(new NCChatMessage.Direct(packet.sender, packet.receiver, packet.getMessage()));
+            } else {
+                continue;
+            }
+            break;
+        }
     }
 }

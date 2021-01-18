@@ -292,7 +292,14 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
             String email = packet.getEmail();
             String password = packet.getPassword();
 
-            client.clientID = database.findUser(email, password);
+            long clientID = database.findUser(email, password);
+            if (isClientOnline(clientID)) {
+                LOG.warning("Logging in from different location. Culprit: " + client);
+                client.close();
+                return;
+            } else {
+                client.clientID = clientID;
+            }
 
             try {
                 client.sendPacket(new AuthenticationStatus(client.clientID));
@@ -377,17 +384,26 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
 
     @Override
     public void onClientSentDirectMessage(NCConnection sender, ClientSentDirectMessage packet) throws Exception {
-        long senderID = sender.clientID;
-        long receiverID = packet.sender;
+        if (packet.sender != sender.clientID) {
+            LOG.warning("Someone tried to impersonate clientID=" + packet.sender + ". Culprit: " + sender);
+            sender.close();
+            return;
+        }
 
+        boolean friend = false;
         for (NCConnection receiver : clients.values()) {
-            if (receiver.clientID == receiverID) {
+            if (receiver.clientID == packet.receiver) {
                 LOG.info("Relaying message from " + sender + " to " + receiver);
                 receiver.sendPacket(new ClientSentDirectMessage(packet.sender, packet.receiver, packet.getMessage()));
+                friend = true;
+                break;
             }
         }
-        
-        sender.sendPacket(new ClientSentDirectMessage(packet.sender, packet.receiver, packet.getMessage()));
+        if (!friend) {
+            LOG.warning("Preventing send to non-friend clientID=" + packet.sender + ". Culprit: " + sender);
+            return;
+        }
+        sender.sendPacket(packet);
     }
 
     private void onLogin(NCConnection client) throws ConnectionClosed {
@@ -395,16 +411,6 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
 
         sendFriendList(client, friendIDs);
     }
-
-    private void updatePresence(NCConnection client, boolean isOnline) {
-        List<Long> friendIDs = database.friendsWith(client.clientID);
-
-//        for(NCConnection otherClient : clients.values()){
-//            if(other)
-//        }
-
-    }
-
 
     public static void main(String[] args) {
         LOG.setUseParentHandlers(false);
