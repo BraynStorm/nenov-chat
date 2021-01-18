@@ -162,17 +162,6 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
         clients.values().forEach(NCBasicConnection::processWritePackets);
     }
 
-    private void sendFriendList(NCConnection client, Collection<Long> friends) throws ConnectionClosed {
-        try {
-            client.sendPacket(new ClientUpdateFriendList(friends));
-        } catch (PacketCorruptionException e) {
-            // Eat
-            LOG.severe("Client has too many friends. Culprit: " + client);
-            client.close();
-        }
-
-    }
-
     private void removeDisconnectedClients() {
         clients.keySet().removeAll(
                 clients.keySet().stream()
@@ -251,6 +240,17 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
                 close(key.channel());
             }
         }
+    }
+
+    private void sendFriendList(NCConnection client, List<Long> friends, List<Boolean> online) throws ConnectionClosed {
+        try {
+            client.sendPacket(new ClientUpdateFriendList(friends, online));
+        } catch (PacketCorruptionException e) {
+            // Eat
+            LOG.severe("Client has too many friends. Culprit: " + client);
+            client.close();
+        }
+
     }
 
     @Override

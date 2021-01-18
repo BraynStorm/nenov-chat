@@ -21,6 +21,8 @@ public class NetUtil {
                 return 4;
             } else if (f.getType() == long[].class) {
                 return 2;
+            } else if (f.getType() == int[].class) {
+                return 4;
             } else if (f.getType() == short.class) {
                 return 2;
             } else if (f.getType() == int.class) {
@@ -39,14 +41,26 @@ public class NetUtil {
     public static <T extends NCMessage> int TotalSizeOf(final T instance) {
         int arraySize = Fields(instance.getClass()).mapToInt(f -> {
             try {
-                if (f.getType() != byte[].class)
+                if (f.getType() == byte[].class) {
+                    byte[] arr = (byte[]) f.get(instance);
+                    if (arr == null)
+                        return 0;
+                    else
+                        return arr.length;
+                } else if (f.getType() == long[].class) {
+                    long[] arr = (long[]) f.get(instance);
+                    if (arr == null)
+                        return 0;
+                    else
+                        return arr.length;
+                } else if (f.getType() == int[].class) {
+                    int[] arr = (int[]) f.get(instance);
+                    if (arr == null)
+                        return 0;
+                    else
+                        return arr.length;
+                } else
                     return 0;
-
-                byte[] arr = (byte[]) f.get(instance);
-                if (arr == null)
-                    return 0;
-                else
-                    return arr.length;
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
                 return 0;
@@ -176,8 +190,11 @@ public class NetUtil {
                             byte[] bytes = (byte[]) f.get(packet);
                             destination.putInt(bytes.length);
                             destination.put(bytes);
-                        }
-                        if (f.getType() == long[].class) {
+                        } else if (f.getType() == int[].class) {
+                            int[] ints = (int[]) f.get(packet);
+                            destination.putInt(ints.length);
+                            destination.asIntBuffer().put(ints);
+                        } else if (f.getType() == long[].class) {
                             long[] longs = (long[]) f.get(packet);
                             destination.putInt(longs.length);
                             destination.asLongBuffer().put(longs);
