@@ -196,6 +196,7 @@ public class NCLogin {
         if (!isShown())
             return;
         labelStatus.setText("Success");
+        NCClientApp.client.setEmail(fieldEmail.getText());
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/nc/ncwindow.fxml"));
 
@@ -209,7 +210,6 @@ public class NCLogin {
             NCWindow window = loader.getController();
             stage.setOnShown(e -> window.onShow());
             stage.show();
-
 
             labelStatus.getScene().getWindow().hide();
         } catch (IOException e1) {

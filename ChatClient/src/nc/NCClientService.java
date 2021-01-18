@@ -13,6 +13,11 @@ public class NCClientService implements NCMessageVisitor<NCConnection> {
     private State state = State.NOT_CONNECTED;
     private NCConnection connection;
     private List<NCFriend> friendList = new ArrayList<>();
+    private String email;
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     public List<NCFriend> getFriendList() {
         return friendList;
@@ -59,6 +64,25 @@ public class NCClientService implements NCMessageVisitor<NCConnection> {
         } catch (InterruptedException e) {
             // Eat
         }
+    }
+
+    public String getMyName() {
+        return email;
+    }
+
+    public String getName(long clientID) {
+        if (!isAuthenticated())
+            return null;
+
+        if (clientID == connection.clientID) {
+            return email;
+        } else {
+            for (NCFriend f : friendList) {
+                if (f.id == clientID)
+                    return f.name;
+            }
+        }
+        return null;
     }
 
     public boolean send(NCMessage message) throws ConnectionClosed {
@@ -173,15 +197,14 @@ public class NCClientService implements NCMessageVisitor<NCConnection> {
     @Override
     public void onClientSentDirectMessage(NCConnection receiver, ClientSentDirectMessage packet) throws Exception {
         // receive message
-        System.out.print("New message from ");
+        NCClientService client = NCClientApp.client;
+
+        System.out.println("New message from " + client.getName(packet.sender) + " to " + client.getName(packet.receiver));
         for (NCFriend f : NCClientApp.client.friendList) {
             if (f.id == packet.sender || f.id == packet.receiver) {
-                System.out.println(packet);
                 f.messages.add(new NCChatMessage.Direct(packet.sender, packet.receiver, packet.getMessage()));
-            } else {
-                continue;
+                break;
             }
-            break;
         }
     }
 }

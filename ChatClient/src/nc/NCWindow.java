@@ -49,6 +49,22 @@ public class NCWindow {
 
                     }
                 });
+
+                if (friendList.getSelectionModel() != null) {
+                    NCFriend friend = (NCFriend) friendList.getSelectionModel().getSelectedItem();
+                    if (friend != null)
+                        for (NCChatMessage s : friend.messages) {
+                            NCChatMessage.Direct msg = (NCChatMessage.Direct) s;
+                            String senderName = NCClientApp.client.getName(msg.getSender());
+                            String content = msg.getContent();
+
+                            if (senderName != null && content != null)
+                                chatBox.setText(chatBox.getText() + NCClientApp.client.getName(msg.getSender()) + " -> " + msg.getContent() + "\n");
+                            else {
+                                ;
+                            }
+                        }
+                }
             }
         }
     };
@@ -94,8 +110,6 @@ public class NCWindow {
             } catch (Exception e) {
             }
         }
-
-        //chatBox.setText(chatBox.getText() + NCLogin.userEmail + " -> " + chatLineText + "\n");
         chatLine.clear();
     }
 
