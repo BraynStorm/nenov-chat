@@ -1,8 +1,12 @@
 package nc;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class NCFriend {
     public long id;
     public String name = "";
+    public List<String> messages = new ArrayList<String>();
     public boolean online;
 
 
@@ -22,6 +26,10 @@ public class NCFriend {
 
     public void setOnline(boolean online) {
         this.online = online;
+    }
+
+    public void addMessage(String message) {
+        this.messages.add(message);
     }
 
     @Override

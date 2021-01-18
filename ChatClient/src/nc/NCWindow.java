@@ -42,6 +42,11 @@ public class NCWindow {
                         }
                     }
                 });
+
+
+                chatBox.setText(chatBox.getText() + "This is a test\n");
+
+
             }
         }
     };
