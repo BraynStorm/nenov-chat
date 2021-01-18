@@ -40,13 +40,14 @@ public class NCDB {
             "\n" +
             "CREATE TABLE nc_friend\n" +
             "(\n" +
-            "  user_a int NOT NULL,\n" +
-            "  user_b int NOT NULL,\n" +
+            "  user_a int NOT NULL\n" +
+            "    REFERENCES nc_user\n" +
+            "      ON UPDATE CASCADE ON DELETE CASCADE,\n" +
+            "  user_b int NOT NULL\n" +
+            "    REFERENCES nc_user\n" +
+            "      ON UPDATE CASCADE ON DELETE CASCADE,\n" +
             "  CONSTRAINT nc_friend_pk\n" +
-            "    PRIMARY KEY (user_a, user_b),\n" +
-            "  CONSTRAINT nc_friend_nc_user_id_id_fk\n" +
-            "    FOREIGN KEY (user_a, user_b) REFERENCES nc_user (id, id)\n" +
-            "      ON UPDATE CASCADE ON DELETE CASCADE\n" +
+            "    PRIMARY KEY (user_a, user_b)\n" +
             ");\n" +
             "\n";
 
