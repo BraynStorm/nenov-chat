@@ -36,13 +36,17 @@ public class NCWindow {
                 Platform.runLater(() -> {
                     // UPDATE friend list
                     List<NCFriend> friends = client.getFriendList();
+<<<<<<< HEAD
                     String name="";
                     if(!friends.isEmpty()){
                         if(friendList.getSelectionModel().selectedIndexProperty().intValue() != -1 )
                             name = friendList.getSelectionModel().getSelectedItem().toString();
 
+=======
+                    if (!friends.isEmpty()) {
+>>>>>>> a14208a7a37abf214f66d123f70234954336611d
                         friendList.getItems().clear();
-                        for(NCFriend friend : friends){
+                        for (NCFriend friend : friends) {
                             friendList.getItems().add(friend);
                             if(friend.name.equals(name)) {
                                 //friendList.getSelectionModel().select(name);
@@ -52,6 +56,14 @@ public class NCWindow {
                         }
                     }
                 });
+
+                if (friendList.getSelectionModel() != null) {
+                    NCFriend friend = (NCFriend) friendList.getSelectionModel().getSelectedItem();
+
+                    for (String s : friend.messages) {
+                        chatBox.setText(chatBox.getText() + friend.name + " -> " + s + "\n");
+                    }
+                }
             }
         }
     };
@@ -65,7 +77,7 @@ public class NCWindow {
     }
 
     public void onSendAction() {
-        if (!chatLine.isVisible()) return;
+        if (!chatLine.isVisible() || chatLine.getText().isEmpty()) return;
         friendList.getItems().add(new NCFriend(friendList.getItems().size()));
         String chatLineText = chatLine.getText();
 
@@ -99,6 +111,7 @@ public class NCWindow {
             }
         }
 
+        chatBox.setText(chatBox.getText() + NCLogin.userEmail + " -> " + chatLineText + "\n");
         chatLine.clear();
     }
 
