@@ -204,7 +204,7 @@ public class NCLogin {
         try {
             root = loader.load();
             Stage stage = new Stage();
-            stage.setTitle("NChat");
+            stage.setTitle("NChat - " + fieldEmail.getText());
             stage.setScene(new Scene(root));
             stage.setResizable(false);
             NCWindow window = loader.getController();
