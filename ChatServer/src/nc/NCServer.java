@@ -253,6 +253,7 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
     }
 
     private void sendFriendList(NCConnection client) throws ConnectionClosed {
+        LOG.info("Sending friend list to " + client);
         long clientID = client.clientID;
 
         List<Long> friendIDs = database.friendsWith(clientID);
@@ -273,7 +274,7 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
             LOG.severe("Client has too many friends. Culprit: " + client);
             client.close();
         }
-
+        LOG.info("Finished sending friend list to " + client);
     }
 
     @Override
@@ -360,8 +361,21 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
 
     }
 
+    @Override
+    public void onClientRemoveFriend(NCConnection client, ClientRemoveFriend packet) {
+        long friendID = database.findUserID(packet.getEmail());
+
+        if (friendID != -1) {
+            database.removeFriends(client.clientID, friendID);
+            try {
+                sendFriendList(client);
+            } catch (ConnectionClosed connectionClosed) {
+            }
+        }
+
+    }
+
     private void onLogin(NCConnection client) throws ConnectionClosed {
-        LOG.info("Sending friend list to " + client);
         sendFriendList(client);
     }
 
