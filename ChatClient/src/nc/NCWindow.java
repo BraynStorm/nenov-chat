@@ -9,6 +9,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import nc.message.ClientAddFriend;
 import nc.message.ClientRemoveFriend;
+import nc.message.ClientSentDirectMessage;
 import nc.message.NCMessage;
 
 public class NCWindow {
@@ -42,7 +43,7 @@ public class NCWindow {
     }
 
     public void onSendAction() {
-        // friendList.getItems().add(new NCFriend(friendList.getItems().size()));
+        friendList.getItems().add(new NCFriend(friendList.getItems().size()));
 
         String chatLineText = chatLine.getText();
 
@@ -66,6 +67,18 @@ public class NCWindow {
                     NCClientApp.client.send(new ClientRemoveFriend(frName));
                 } catch (Exception e) {
                 }
+            }
+        } else {
+            try {
+                long id = -1;
+                for (NCFriend friend : NCClientApp.client.getFriendList()) {
+                    if (friend.name.equals(friendList.getSelectionModel().getSelectedItem())) {
+                        id = friend.id;
+                        break;
+                    }
+                }
+                NCClientApp.client.send(new ClientSentDirectMessage(id, chatLineText));
+            } catch (Exception e) {
             }
         }
     }
