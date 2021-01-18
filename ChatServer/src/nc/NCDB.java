@@ -67,6 +67,7 @@ public class NCDB {
     private PreparedStatement sqlRemoveFriends;
     private PreparedStatement sqlSendDirectMessage;
     private PreparedStatement sqlFindEmail;
+    private PreparedStatement sqlFindUserID;
 
     public void connect() {
         connection = null;
@@ -233,9 +234,9 @@ public class NCDB {
     public long findUserID(String email) {
         long result = -1;
         try {
-            sqlFindUser.setString(1, email);
+            sqlFindUserID.setString(1, email);
 
-            ResultSet rs = sqlFindUser.executeQuery();
+            ResultSet rs = sqlFindUserID.executeQuery();
             if (rs.next()) {
                 result = rs.getLong(1);
             }
@@ -260,7 +261,7 @@ public class NCDB {
         sqlMakeFriends = connection.prepareStatement("INSERT INTO nc_friend (user_a, user_b) VALUES (?, ?);");
         sqlRemoveFriends = connection.prepareStatement("DELETE FROM nc_friend WHERE (user_a = ?1 AND user_b = ?2) OR (user_a = ?2 AND user_b = ?1);");
         sqlFindEmail = connection.prepareStatement("SELECT email FROM nc_user WHERE id = ?;");
-        sqlFindUser = connection.prepareStatement("SELECT id FROM nc_user WHERE email = ?;");
+        sqlFindUserID = connection.prepareStatement("SELECT id FROM nc_user WHERE email = ?;");
     }
 
 
