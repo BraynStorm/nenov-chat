@@ -1,6 +1,7 @@
 package nc;
 
 import nc.exc.ConnectionClosed;
+import nc.exc.PacketCorruptionException;
 import nc.exc.PortTakenException;
 import nc.message.*;
 
@@ -13,7 +14,7 @@ import java.util.logging.*;
 import java.util.logging.Formatter;
 import java.util.stream.Collectors;
 
-public class NCServer {
+public class NCServer implements NCMessageVisitor<NCConnection> {
     private Selector acceptSelector;
     private Selector readSelector;
     private Selector writeSelector;
@@ -147,31 +148,13 @@ public class NCServer {
             client.processReadPackets();
             var readQueue = client.getReadQueue();
 
-            while (!readQueue.isEmpty()) {
+            while (true) {
                 var packet = readQueue.poll();
-                switch (packet.type()) {
-                    case PING:
-                        try {
-                            client.sendPacket(new Ping());
-                        } catch (ConnectionClosed connectionClosed) {
-                            client.close();
-                        }
-                        break;
-                    case CONNECT_SUCCESSFUL:
-                        break;
-                    case AUTHENTICATE:
-                        handlePacket_Authenticate(client, (Authenticate) packet);
-                        break;
-                    case CLIENT_JOIN_ROOM:
-                        break;
-                    case CLIENT_SEND_DIRECT_MESSAGE:
-                        handlePacket_ClientSendDirectMessage(client, (ClientSentDirectMessage) packet);
-                        break;
-                    case AUTHENTICATION_STATUS:
-                        break;
-                    case REGISTER:
-                        handlePacket_Register(client, (Register) packet);
-                        break;
+                if (packet == null) break;
+                try {
+                    NCMessageVisitor.visit(this, client, packet);
+                } catch (Exception e) {
+                    client.close();
                 }
             }
         });
@@ -179,55 +162,15 @@ public class NCServer {
         clients.values().forEach(NCBasicConnection::processWritePackets);
     }
 
-    private void handlePacket_Authenticate(NCConnection client, Authenticate packet) {
-        if (client.clientID == -1) {
-            var email = packet.getEmail();
-            var password = packet.getPassword();
-
-            long userID = database.findUser(email, password);
-
-            if (userID == -1)
-                LOG.info("Authenticate - Failed");
-            else
-                LOG.info("Authenticate - Success");
-
-            try {
-                client.sendPacket(new AuthenticationStatus(userID));
-                if (userID != -1)
-                    client.sendPacket(new ClientUpdateFriendList());
-            } catch (ConnectionClosed ignored) {
-                client.close();
-            }
-        } else {
-            LOG.warning("Authenticate received when already authenticated. Culprit: " + client);
-            client.close();
-        }
-    }
-
-    private void handlePacket_ClientSendDirectMessage(NCConnection client, ClientSentDirectMessage packet) {
-
-    }
-
-    private void handlePacket_Register(NCConnection client, Register packet) {
-        LOG.info("Register" + client);
-        if (client.getClientID() != -1) {
-            LOG.warning("Logged-in client tried to Register. Culprit: " + client.toString());
-            client.close();
-            return;
-        }
-
-        client.clientID = database.createUser(packet.getEmail(), packet.getPassword());
-
+    private void sendFriendList(NCConnection client, Collection<Long> friends) throws ConnectionClosed {
         try {
-            client.sendPacket(new RegisterStatus(client.clientID));
-            if (client.clientID == -1) {
-                LOG.info("Register failed. " + client);
-            } else {
-                LOG.info("Register success. " + client);
-            }
-        } catch (ConnectionClosed connectionClosed) {
+            client.sendPacket(new ClientUpdateFriendList(friends));
+        } catch (PacketCorruptionException e) {
+            // Eat
+            LOG.severe("Client has too many friends. Culprit: " + client);
             client.close();
         }
+
     }
 
     private void removeDisconnectedClients() {
@@ -310,6 +253,76 @@ public class NCServer {
         }
     }
 
+    @Override
+    public void onPing(NCConnection client, Ping packet) {
+        try {
+            client.sendPacket(new Ping());
+        } catch (ConnectionClosed connectionClosed) {
+            client.close();
+        }
+    }
+
+    @Override
+    public void onAuthenticate(NCConnection client, Authenticate packet) {
+        if (client.clientID == -1) {
+            var email = packet.getEmail();
+            var password = packet.getPassword();
+
+            long userID = database.findUser(email, password);
+
+            try {
+                client.sendPacket(new AuthenticationStatus(userID));
+                if (userID == -1)
+                    LOG.info("Authenticate - Failed");
+                else {
+                    LOG.info("Authenticate - Success");
+                    onLogin(client);
+                }
+            } catch (ConnectionClosed ignored) {
+                client.close();
+            }
+        } else {
+            LOG.warning("Authenticate packet received when already authenticated. Culprit: " + client);
+            client.close();
+        }
+    }
+
+    @Override
+    public void onRegister(NCConnection client, Register message) {
+        LOG.info("Register " + client);
+        if (client.getClientID() != -1) {
+            LOG.warning("Logged-in client tried to Register. Culprit: " + client);
+            client.close();
+            return;
+        }
+
+        client.clientID = database.createUser(message.getEmail(), message.getPassword());
+
+        try {
+            client.sendPacket(new RegisterStatus(client.clientID));
+            if (client.clientID == -1) {
+                LOG.info("Register failed. " + client);
+            } else {
+                LOG.info("Register success. " + client);
+                onLogin(client);
+            }
+        } catch (ConnectionClosed connectionClosed) {
+            client.close();
+        }
+    }
+
+    private void onLogin(NCConnection client) throws ConnectionClosed {
+        var friends = database.friendsWith(client.clientID);
+
+        sendFriendList(client, friends);
+
+        for(var f : friends){
+
+        }
+
+    }
+
+
     public static void main(String[] args) {
         LOG.setUseParentHandlers(false);
 
@@ -353,4 +366,6 @@ public class NCServer {
             e.printStackTrace();
         }
     }
+
+
 }

@@ -127,6 +127,12 @@ public class NCBasicConnection {
             case REGISTER_STATUS:
                 packet = new RegisterStatus();
                 break;
+            case CLIENT_UPDATE_FRIEND_LIST:
+                packet = new ClientUpdateFriendList();
+                break;
+            case CLIENT_USER_CHANGED_STATUS:
+                packet = new ClientUserChangedStatus();
+                break;
             default:
                 throw new PacketCorruptionException();
         }

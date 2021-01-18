@@ -19,12 +19,16 @@ public class NetUtil {
         int fieldSize = Fields(cls).mapToInt(f -> {
             if (f.getType() == byte[].class) {
                 return 4;
+            } else if (f.getType() == long[].class) {
+                return 2;
             } else if (f.getType() == short.class) {
                 return 2;
             } else if (f.getType() == int.class) {
                 return 4;
             } else if (f.getType() == long.class) {
                 return 8;
+            } else if (f.getType() == boolean.class) {
+                return 1;
             }
             throw new IllegalArgumentException();
         }).sum();
@@ -194,5 +198,6 @@ public class NetUtil {
             return canFit;
         }
     }
+
 }
 

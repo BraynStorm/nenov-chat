@@ -5,7 +5,7 @@ import nc.message.*;
 
 import java.net.InetSocketAddress;
 
-public class NCClientService {
+public class NCClientService implements NCMessageVisitor {
     private final InetSocketAddress address = new InetSocketAddress("213.91.183.197", 5511);
 
     private State state = State.NOT_CONNECTED;
@@ -93,28 +93,31 @@ public class NCClientService {
             case CONNECTED:
                 // await AUTHENTICATION_STATUS
                 packet = connection.getReadQueue().poll();
-                if (packet != null && packet.type() == PacketType.AUTHENTICATION_STATUS) {
-                    connection.clientID = ((AuthenticationStatus) packet).clientID;
+                if (packet != null) {
+                    if (packet.type() == PacketType.AUTHENTICATION_STATUS) {
+                        connection.clientID = ((AuthenticationStatus) packet).clientID;
 
-                    if (connection.clientID == -1) {
-                        System.out.println("Login failed.");
-                    } else {
-                        System.out.println("Login successful.");
-                        state = State.AUTHENTICATED;
-                    }
-                }
-                if (packet != null && packet.type() == PacketType.REGISTER_STATUS) {
-                    connection.clientID = ((RegisterStatus) packet).clientID;
+                        if (connection.clientID == -1) {
+                            System.out.println("Login failed.");
+                        } else {
+                            System.out.println("Login successful.");
+                            state = State.AUTHENTICATED;
+                        }
+                    } else if (packet.type() == PacketType.REGISTER_STATUS) {
+                        connection.clientID = ((RegisterStatus) packet).clientID;
 
-                    if (connection.clientID == -1) {
-                        System.out.println("Register failed.");
-                    } else {
-                        System.out.println("Register successful.");
-                        state = State.AUTHENTICATED;
+                        if (connection.clientID == -1) {
+                            System.out.println("Register failed.");
+                        } else {
+                            System.out.println("Register successful.");
+                            state = State.AUTHENTICATED;
+                        }
                     }
                 }
                 break;
             case AUTHENTICATED:
+                // Expect all messages
+
                 break;
         }
     }
