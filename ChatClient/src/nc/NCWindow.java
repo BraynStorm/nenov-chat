@@ -57,7 +57,6 @@ public class NCWindow {
     public void onSendAction() {
         if (!chatLine.isVisible()) return;
         friendList.getItems().add(new NCFriend(friendList.getItems().size()));
-        friendList.getItems().add(new NCFriend(friendList.getItems().size()));
         String chatLineText = chatLine.getText();
 
         // check for command
