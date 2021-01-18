@@ -230,6 +230,21 @@ public class NCDB {
         return result;
     }
 
+    public long findUserID(String email) {
+        long result = -1;
+        try {
+            sqlFindUser.setString(1, email);
+
+            ResultSet rs = sqlFindUser.executeQuery();
+            if (rs.next()) {
+                result = rs.getLong(1);
+            }
+            rs.close();
+        } catch (SQLException ignored) {
+            // Eat
+        }
+        return result;
+    }
 
     private void stop(PreparedStatement ps) {
         try {
@@ -245,6 +260,7 @@ public class NCDB {
         sqlMakeFriends = connection.prepareStatement("INSERT INTO nc_friend (user_a, user_b) VALUES (?, ?);");
         sqlRemoveFriends = connection.prepareStatement("DELETE FROM nc_friend WHERE (user_a = ?1 AND user_b = ?2) OR (user_a = ?2 AND user_b = ?1);");
         sqlFindEmail = connection.prepareStatement("SELECT email FROM nc_user WHERE id = ?;");
+        sqlFindUser = connection.prepareStatement("SELECT id FROM nc_user WHERE email = ?;");
     }
 
 

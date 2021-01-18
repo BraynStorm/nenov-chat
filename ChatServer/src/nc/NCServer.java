@@ -243,9 +243,30 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
         }
     }
 
-    private void sendFriendList(NCConnection client, List<Long> friends, List<ClientUpdateFriendList.Status> status) throws ConnectionClosed {
+    private boolean isClientOnline(long clientID) {
+        for (NCConnection entry : clients.values()) {
+            if (entry.clientID == clientID)
+                return true;
+        }
+        return false;
+    }
+
+    private void sendFriendList(NCConnection client) throws ConnectionClosed {
+        long clientID = client.clientID;
+
+        List<Long> friendIDs = database.friendsWith(clientID);
+        List<Boolean> friendStatus = friendIDs.stream()
+                .map(fid -> isClientOnline(clientID))
+                .collect(Collectors.toList());
+
+        List<String> friendEmails = friendIDs.stream()
+                .map(fid -> database.findEmail(fid))
+                .collect(Collectors.toList());
+
         try {
-            client.sendPacket(new ClientUpdateFriendList(friends, status));
+            for (int i = 0; i < friendIDs.size(); ++i) {
+                client.sendPacket(new ClientUserChangedStatus(friendIDs.get(i), friendEmails.get(i), friendStatus.get(i)));
+            }
         } catch (PacketCorruptionException e) {
             // Eat
             LOG.severe("Client has too many friends. Culprit: " + client);
@@ -322,6 +343,20 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
         }
 
         client.sendPacket(new ClientResponseClientName(email));
+    }
+
+    @Override
+    public void onClientAddFriend(NCConnection client, ClientAddFriend packet) {
+        long friendID = database.findUserID(packet.getEmail());
+
+        if (friendID != -1) {
+            database.makeFriends(client.clientID, friendID);
+            try {
+                sendFriendList(client);
+            } catch (ConnectionClosed connectionClosed) {
+            }
+        }
+
     }
 
     private void onLogin(NCConnection client) throws ConnectionClosed {

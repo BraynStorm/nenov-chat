@@ -16,5 +16,4 @@ public class NCFriendsList {
         return friends.getOrDefault(clientID, new ArrayList<>());
     }
 
-
 }

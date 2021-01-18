@@ -128,9 +128,6 @@ public class NCBasicConnection {
             case REGISTER_STATUS:
                 packet = new RegisterStatus();
                 break;
-            case CLIENT_UPDATE_FRIEND_LIST:
-                packet = new ClientUpdateFriendList();
-                break;
             case CLIENT_USER_CHANGED_STATUS:
                 packet = new ClientUserChangedStatus();
                 break;
@@ -203,7 +200,7 @@ public class NCBasicConnection {
     public String toString() {
         return "NCBasicConnection{" +
                 "sessionID=" + sessionID +
-                ", senderID=" + clientID +
+                ", id=" + clientID +
                 '}';
     }
 }

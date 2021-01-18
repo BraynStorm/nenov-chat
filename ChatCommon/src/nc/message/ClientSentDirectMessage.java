@@ -3,15 +3,17 @@ package nc.message;
 import nc.exc.PacketCorruptionException;
 
 public class ClientSentDirectMessage extends NCMessage {
-
-    public long senderID;
+    /**
+     * Sender or Receiver
+     */
+    public long id;
     public byte[] message;
 
     public ClientSentDirectMessage() {
     }
 
-    public ClientSentDirectMessage(long senderID, String message) throws PacketCorruptionException {
-        this.senderID = senderID;
+    public ClientSentDirectMessage(long id, String message) throws PacketCorruptionException {
+        this.id = id;
 
         this.message = message.getBytes(NCMessage.Charset());
         if (this.message.length > messageMaxSize())

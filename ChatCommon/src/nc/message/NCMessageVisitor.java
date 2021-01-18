@@ -29,9 +29,6 @@ public interface NCMessageVisitor<Conn extends NCBasicConnection> {
             case REGISTER_STATUS:
                 visitor.onRegisterStatus(client, (RegisterStatus) packet);
                 break;
-            case CLIENT_UPDATE_FRIEND_LIST:
-                visitor.onClientUpdateFriendList(client, (ClientUpdateFriendList) packet);
-                break;
             case CLIENT_USER_CHANGED_STATUS:
                 visitor.onClientUserChangedStatus(client, (ClientUserChangedStatus) packet);
                 break;
@@ -63,9 +60,6 @@ public interface NCMessageVisitor<Conn extends NCBasicConnection> {
     }
 
     default void onClientSentDirectMessage(Conn client, ClientSentDirectMessage packet) throws Exception {
-    }
-
-    default void onClientUpdateFriendList(Conn client, ClientUpdateFriendList packet) throws Exception {
     }
 
     default void onConnectSuccessful(Conn client, ConnectSuccessful packet) throws Exception {
