@@ -8,30 +8,30 @@ import java.util.stream.IntStream;
 
 public class Util {
     public static long[] toLongArray(Collection<Long> collection) {
-        var arr = new long[collection.size()];
+        long[] arr = new long[collection.size()];
         int i = 0;
 
-        for (var element : collection)
+        for (long element : collection)
             arr[i++] = element;
 
         return arr;
     }
 
     public static int[] toIntArray(Collection<Integer> collection) {
-        var arr = new int[collection.size()];
+        int[] arr = new int[collection.size()];
         int i = 0;
 
-        for (var element : collection)
+        for (int element : collection)
             arr[i++] = element;
 
         return arr;
     }
 
     public static boolean[] toBooleanArray(Collection<Boolean> collection) {
-        var arr = new boolean[collection.size()];
+        boolean[] arr = new boolean[collection.size()];
         int i = 0;
 
-        for (var element : collection)
+        for (boolean element : collection)
             arr[i++] = element;
 
         return arr;

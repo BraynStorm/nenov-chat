@@ -6,9 +6,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class NCClientApp extends Application {
     public static NCClientService client;
 
@@ -26,7 +23,7 @@ public class NCClientApp extends Application {
         NCLogin loginController = loader.getController();
         primaryStage.setOnShown(e -> loginController.connect());
 
-        var tickThread = new Thread(() -> {
+        Thread tickThread = new Thread(() -> {
             while (true) {
                 client.networkTick();
                 try {

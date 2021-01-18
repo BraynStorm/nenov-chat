@@ -10,6 +10,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.*;
 import java.util.logging.Formatter;
 import java.util.stream.Collectors;
@@ -64,7 +65,7 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
 
     public void stop() {
         stop = true;
-        while (!stopped) Thread.onSpinWait();
+        while (!stopped) ;
         database.stop();
     }
 
@@ -146,10 +147,10 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
     private void processClients() {
         clients.values().forEach(client -> {
             client.processReadPackets();
-            var readQueue = client.getReadQueue();
+            BlockingQueue<NCMessage> readQueue = client.getReadQueue();
 
             while (true) {
-                var packet = readQueue.poll();
+                NCMessage packet = readQueue.poll();
                 if (packet == null) break;
                 try {
                     NCMessageVisitor.visit(this, client, packet);
@@ -265,8 +266,8 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
     @Override
     public void onAuthenticate(NCConnection client, Authenticate packet) {
         if (client.clientID == -1) {
-            var email = packet.getEmail();
-            var password = packet.getPassword();
+            String email = packet.getEmail();
+            String password = packet.getPassword();
 
             long userID = database.findUser(email, password);
 
@@ -324,7 +325,7 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
     }
 
     private void onLogin(NCConnection client) throws ConnectionClosed {
-        var friends = database.friendsWith(client.clientID);
+        List<Long> friends = database.friendsWith(client.clientID);
 
         // sendFriendList(client, friends);
 

@@ -49,7 +49,7 @@ public class NCConnectionContainer {
 
         for (SelectionKey key : selector.selectedKeys()) {
             if (key.isConnectable()) {
-                var keyChannel = (SocketChannel) key.channel();
+                SocketChannel keyChannel = (SocketChannel) key.channel();
                 try {
                     if (keyChannel.finishConnect()) {
                         NCConnection conn = new NCConnection(keyChannel);

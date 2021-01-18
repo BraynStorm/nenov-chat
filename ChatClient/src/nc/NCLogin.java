@@ -33,7 +33,7 @@ public class NCLogin {
         @Override
         protected Void call() throws Exception {
             final NCClientService.State[] lastState = new NCClientService.State[1];
-            var scene = labelStatus.getScene();
+            Scene scene = labelStatus.getScene();
 
             while (isShown()) {
                 Thread.sleep(200);
@@ -42,7 +42,7 @@ public class NCLogin {
                     if (!isShown())
                         return;
 
-                    var s = NCClientApp.client;
+                    NCClientService s = NCClientApp.client;
 
                     switch (s.getState()) {
                         case NOT_CONNECTED:
@@ -109,15 +109,15 @@ public class NCLogin {
 
     public void connect() {
         _startConnectUI();
-        var t = new Thread(updaterIsConnected);
+        Thread t = new Thread(updaterIsConnected);
         t.setDaemon(true);
         t.start();
     }
 
-    private Service<Boolean> authenticationChecker = new Service<>() {
+    private Service<Boolean> authenticationChecker = new Service<Boolean>() {
         @Override
         protected Task<Boolean> createTask() {
-            return new Task<>() {
+            return new Task<Boolean>() {
                 @Override
                 protected Boolean call() throws Exception {
                     for (int i = 0; i < 8; ++i)
@@ -203,7 +203,7 @@ public class NCLogin {
         Parent root = null;
         try {
             root = loader.load();
-            var stage = new Stage();
+            Stage stage = new Stage();
             stage.setTitle("NChat");
             stage.setScene(new Scene(root));
             stage.setResizable(false);

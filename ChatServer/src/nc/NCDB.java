@@ -78,7 +78,7 @@ public class NCDB {
         }
 
         try {
-            var createDB = connection.createStatement();
+            Statement createDB = connection.createStatement();
             createDB.executeUpdate(STMT_CREATE);
             createDB.close();
             LOG.info("Created database");
@@ -219,7 +219,7 @@ public class NCDB {
         try {
             sqlFindEmail.setLong(1, userID);
 
-            var rs = sqlFindEmail.executeQuery();
+            ResultSet rs = sqlFindEmail.executeQuery();
             if (rs.next()) {
                 result = rs.getString(1);
             }

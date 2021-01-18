@@ -18,7 +18,7 @@ public class NCWindow {
         @Override
         protected Void call() throws Exception {
             while (true) {
-                var client = NCClientApp.client;
+                NCClientService client = NCClientApp.client;
                 Thread.sleep(500);
 
                 Platform.runLater(() -> {
@@ -29,7 +29,7 @@ public class NCWindow {
     };
 
     public void onShow() {
-        var t = new Thread(timer);
+        Thread t = new Thread(timer);
         t.setDaemon(true);
         t.start();
     }
