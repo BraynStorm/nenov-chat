@@ -1,6 +1,6 @@
 package nc.message;
 
-public class ConnectSuccessful implements NCMessage {
+public class ConnectSuccessful extends NCMessage {
     public long sessionID;
 
     public ConnectSuccessful() {

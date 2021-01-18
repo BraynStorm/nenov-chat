@@ -2,12 +2,9 @@ package nc.message;
 
 import nc.exc.PacketCorruptionException;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
-public class ClientUpdateFriendList implements NCMessage {
+public class ClientUpdateFriendList extends NCMessage {
     public long[] friends;
 
     public ClientUpdateFriendList() {
@@ -28,6 +25,10 @@ public class ClientUpdateFriendList implements NCMessage {
         return 512;
     }
 
+//    public Collection<Long> getFriends() {
+//        return friends;
+//    }
+
     @Override
     public PacketType type() {
         return PacketType.CLIENT_UPDATE_FRIEND_LIST;
@@ -36,5 +37,10 @@ public class ClientUpdateFriendList implements NCMessage {
     @Override
     public int maximumSize() {
         return fixedSize() + maximumFriendsList() * 8;
+    }
+
+    @Override
+    public void validatePostRead() throws PacketCorruptionException {
+        super.validatePostRead();
     }
 }

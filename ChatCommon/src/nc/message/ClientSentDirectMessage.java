@@ -2,7 +2,7 @@ package nc.message;
 
 import nc.exc.PacketCorruptionException;
 
-public class ClientSentDirectMessage implements NCMessage {
+public class ClientSentDirectMessage extends NCMessage {
 
     public long clientID;
     public byte[] message;
@@ -34,6 +34,7 @@ public class ClientSentDirectMessage implements NCMessage {
 
     @Override
     public void validatePostRead() throws PacketCorruptionException {
+        super.validatePostRead();
         NetUtil.Read.Check(message.length <= messageMaxSize());
     }
 }

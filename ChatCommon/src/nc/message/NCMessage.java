@@ -6,34 +6,35 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-public interface NCMessage {
-    static Charset Charset() {
+public abstract class NCMessage {
+    public static Charset Charset() {
         return Charset.forName("UTF-8");
     }
 
-    default boolean toBytes(ByteBuffer destination) {
+    public boolean toBytes(ByteBuffer destination) {
         return NetUtil.Write.AutoWrite(destination, this);
     }
 
-    default void fromBytes(ByteBuffer source) throws IOException {
+    public void fromBytes(ByteBuffer source) throws IOException {
         NetUtil.Read.AutoRead(source, this);
 
     }
 
-    default int maximumSize() {
+    public int maximumSize() {
         return fixedSize();
     }
 
-    default int fixedSize() {
+    public int fixedSize() {
         return NetUtil.SizeOf(this.getClass());
     }
 
-    default int size() {
+    public int size() {
         return NetUtil.TotalSizeOf(this);
     }
 
-    PacketType type();
+    public abstract PacketType type();
 
-    default void validatePostRead() throws PacketCorruptionException {
+    public void validatePostRead() throws PacketCorruptionException {
+        NetUtil.Read.Check(size() <= maximumSize());
     }
 }

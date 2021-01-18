@@ -1,6 +1,6 @@
 package nc.message;
 
-public class RegisterStatus implements NCMessage {
+public class RegisterStatus extends NCMessage {
     public long clientID;
 
     public RegisterStatus() {

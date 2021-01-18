@@ -2,7 +2,7 @@ package nc.message;
 
 import nc.exc.PacketCorruptionException;
 
-public class ClientJoinRoom implements NCMessage {
+public class ClientJoinRoom extends NCMessage {
     public long clientID;
     public byte[] name;
 
@@ -38,6 +38,7 @@ public class ClientJoinRoom implements NCMessage {
 
     @Override
     public void validatePostRead() throws PacketCorruptionException {
+        super.validatePostRead();
         NetUtil.Read.Check(name.length <= stringMaxSize());
     }
 }

@@ -2,7 +2,7 @@ package nc.message;
 
 import java.io.Serializable;
 
-public class Ping implements Serializable, NCMessage {
+public class Ping extends NCMessage implements Serializable {
     public long time = 0;
 
     @Override

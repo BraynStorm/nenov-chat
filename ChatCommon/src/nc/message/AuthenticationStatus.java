@@ -1,6 +1,6 @@
 package nc.message;
 
-public class AuthenticationStatus implements NCMessage {
+public class AuthenticationStatus extends NCMessage {
     public long clientID = -1;
 
 

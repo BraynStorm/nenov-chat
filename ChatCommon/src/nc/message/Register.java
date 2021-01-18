@@ -2,7 +2,7 @@ package nc.message;
 
 import nc.exc.PacketCorruptionException;
 
-public class Register implements NCMessage {
+public class Register extends NCMessage {
     public long sessionID;
 
     public byte[] email;
@@ -54,6 +54,7 @@ public class Register implements NCMessage {
 
     @Override
     public void validatePostRead() throws PacketCorruptionException {
+        super.validatePostRead();
         NetUtil.Read.Check(email.length <= maximumEmailSize());
         NetUtil.Read.Check(password.length <= maximumPasswordSize());
     }
