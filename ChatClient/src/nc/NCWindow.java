@@ -46,8 +46,8 @@ public class NCWindow {
                 if (friendList.getSelectionModel() != null) {
                     NCFriend friend = (NCFriend) friendList.getSelectionModel().getSelectedItem();
 
-                    for (String temp : friend.messages) {
-                        chatBox.setText(chatBox.getText() + temp + "\n");
+                    for (String s : friend.messages) {
+                        chatBox.setText(chatBox.getText() + friend.name + " -> " + s + "\n");
                     }
                 }
             }
