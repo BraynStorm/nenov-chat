@@ -33,11 +33,9 @@ public class NCWindow {
                 Thread.sleep(500);
 
                 Platform.runLater(() -> {
-                    System.out.println("update");
                     // UPDATE friend list
                     List<NCFriend> friends = client.getFriendList();
                     if(!friends.isEmpty()){
-                        System.out.println("Not empty");
                         friendList.getItems().clear();
                         for(NCFriend friend : friends){
                             friendList.getItems().add(friend);
