@@ -4,10 +4,7 @@ import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import nc.message.ClientAddFriend;
 import nc.message.ClientRemoveFriend;
 import nc.message.ClientSentDirectMessage;
@@ -35,35 +32,29 @@ public class NCWindow {
 
                 Platform.runLater(() -> {
                     // UPDATE friend list
+                    friendList.getItems().clear();
                     List<NCFriend> friends = client.getFriendList();
-<<<<<<< HEAD
                     String name="";
-                    if(!friends.isEmpty()){
-                        if(friendList.getSelectionModel().selectedIndexProperty().intValue() != -1 )
-                            name = friendList.getSelectionModel().getSelectedItem().toString();
-
-=======
                     if (!friends.isEmpty()) {
->>>>>>> a14208a7a37abf214f66d123f70234954336611d
-                        friendList.getItems().clear();
                         for (NCFriend friend : friends) {
                             friendList.getItems().add(friend);
                             if(friend.name.equals(name)) {
-                                //friendList.getSelectionModel().select(name);
-                                friendList.setSelectionModel(friendList.getSelectionModel().select(name));
+                                friendList.scrollTo(name);
+                                friendList.getSelectionModel().select(name);
                                 System.out.println("Selecting " + name);
                             }
                         }
+
                     }
                 });
 
-                if (friendList.getSelectionModel() != null) {
-                    NCFriend friend = (NCFriend) friendList.getSelectionModel().getSelectedItem();
-
-                    for (String s : friend.messages) {
-                        chatBox.setText(chatBox.getText() + friend.name + " -> " + s + "\n");
-                    }
-                }
+//                if (friendList.getSelectionModel() != null) {
+//                    NCFriend friend = (NCFriend) friendList.getSelectionModel().getSelectedItem();
+//
+//                    for (String s : friend.messages) {
+//                        chatBox.setText(chatBox.getText() + friend.name + " -> " + s + "\n");
+//                    }
+//                }
             }
         }
     };
@@ -111,7 +102,7 @@ public class NCWindow {
             }
         }
 
-        chatBox.setText(chatBox.getText() + NCLogin.userEmail + " -> " + chatLineText + "\n");
+        //chatBox.setText(chatBox.getText() + NCLogin.userEmail + " -> " + chatLineText + "\n");
         chatLine.clear();
     }
 
