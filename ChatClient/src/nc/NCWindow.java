@@ -23,6 +23,8 @@ public class NCWindow {
     @FXML
     private TextArea chatBox;
 
+    String name="";
+
     private Task<Void> timer = new Task<Void>() {
         @Override
         protected Void call() throws Exception {
@@ -34,7 +36,7 @@ public class NCWindow {
                     // UPDATE friend list
                     friendList.getItems().clear();
                     List<NCFriend> friends = client.getFriendList();
-                    String name="";
+
                     if (!friends.isEmpty()) {
                         for (NCFriend friend : friends) {
                             friendList.getItems().add(friend);
@@ -112,5 +114,6 @@ public class NCWindow {
 
     public void handleMouseClick(javafx.scene.input.MouseEvent mouseEvent) {
         chatLine.setVisible(true);
+        name = ((NCFriend) friendList.getSelectionModel().getSelectedItem()).name;
     }
 }
