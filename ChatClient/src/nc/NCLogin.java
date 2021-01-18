@@ -29,6 +29,7 @@ public class NCLogin {
     @FXML private URL location;
     @FXML private ResourceBundle resources;
 
+    public static String userEmail;
     public Task<Void> updaterIsConnected = new Task<Void>() {
         @Override
         protected Void call() throws Exception {
@@ -137,11 +138,11 @@ public class NCLogin {
 
     public void logIn() {
         _startLoginUI();
-        String email = fieldEmail.getText();
+        userEmail = fieldEmail.getText();
         String password = fieldPassword.getText();
 
         try {
-            NCClientApp.client.send(new Authenticate(NCClientApp.client.sessionID(), email, password));
+            NCClientApp.client.send(new Authenticate(NCClientApp.client.sessionID(), userEmail, password));
         } catch (PacketCorruptionException e) {
             _endLoginUI();
             labelStatus.setText("Email or Password too long");
@@ -165,11 +166,11 @@ public class NCLogin {
 
     public void signUp() {
         _startLoginUI();
-        String email = fieldEmail.getText();
+        userEmail = fieldEmail.getText();
         String password = fieldPassword.getText();
 
         try {
-            NCClientApp.client.send(new Register(NCClientApp.client.sessionID(), email, password));
+            NCClientApp.client.send(new Register(NCClientApp.client.sessionID(), userEmail, password));
         } catch (PacketCorruptionException e) {
             _endLoginUI();
             labelStatus.setText("Email or Password too long.");

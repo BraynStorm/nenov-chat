@@ -44,7 +44,7 @@ public class NCWindow {
                 });
 
 
-                chatBox.setText(chatBox.getText() + "This is a test\n");
+               // chatBox.setText(chatBox.getText() + "This is a test\n");
 
 
             }
@@ -60,7 +60,7 @@ public class NCWindow {
     }
 
     public void onSendAction() {
-        if (!chatLine.isVisible()) return;
+        if (!chatLine.isVisible() || chatLine.getText().isEmpty()) return;
         friendList.getItems().add(new NCFriend(friendList.getItems().size()));
         String chatLineText = chatLine.getText();
 
@@ -94,6 +94,7 @@ public class NCWindow {
             }
         }
 
+        chatBox.setText(chatBox.getText() + NCLogin.userEmail + " -> " + chatLineText + "\n");
         chatLine.clear();
     }
 
