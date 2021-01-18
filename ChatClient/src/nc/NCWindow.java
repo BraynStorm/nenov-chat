@@ -12,6 +12,8 @@ import nc.message.ClientRemoveFriend;
 import nc.message.ClientSentDirectMessage;
 import nc.message.NCMessage;
 
+import java.util.List;
+
 public class NCWindow {
     @FXML
     private Button send;
@@ -31,6 +33,13 @@ public class NCWindow {
 
                 Platform.runLater(() -> {
                     // UPDATE friend list
+                    List<NCFriend> friends = client.getFriendList();
+                    if(!friends.isEmpty()){
+                        friendList.getItems().clear();
+                        for(NCFriend friend : friends){
+                            friendList.getItems().add(friend.name);
+                        }
+                    }
                 });
             }
         }
