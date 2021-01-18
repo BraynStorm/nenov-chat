@@ -107,6 +107,18 @@ public class NetUtil {
                         byte[] bytes = new byte[arraySize];
                         source.get(bytes);
                         f.set(packet, bytes);
+                    }
+                    if (f.getType() == long[].class) {
+                        if (source.remaining() < 4)
+                            throw new PacketCorruptionException();
+
+                        int arraySize = source.getInt();
+                        if (source.remaining() < arraySize || arraySize < 0)
+                            throw new PacketCorruptionException();
+
+                        long[] longs = new long[arraySize];
+                        source.asLongBuffer().get(longs);
+                        f.set(packet, longs);
                     } else if (f.getType() == short.class) {
                         if (source.remaining() < 2)
                             throw new PacketCorruptionException();
@@ -160,6 +172,11 @@ public class NetUtil {
                             byte[] bytes = (byte[]) f.get(packet);
                             destination.putInt(bytes.length);
                             destination.put(bytes);
+                        }
+                        if (f.getType() == long[].class) {
+                            long[] longs = (long[]) f.get(packet);
+                            destination.putInt(longs.length);
+                            destination.asLongBuffer().put(longs);
                         } else if (f.getType() == short.class) {
                             destination.putShort((short) f.get(packet));
                         } else if (f.getType() == int.class) {

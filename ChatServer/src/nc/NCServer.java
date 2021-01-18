@@ -190,8 +190,11 @@ public class NCServer {
                 LOG.info("Authenticate - Failed");
             else
                 LOG.info("Authenticate - Success");
+
             try {
                 client.sendPacket(new AuthenticationStatus(userID));
+                if (userID != -1)
+                    client.sendPacket(new ClientUpdateFriendList());
             } catch (ConnectionClosed ignored) {
                 client.close();
             }

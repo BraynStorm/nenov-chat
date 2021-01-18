@@ -9,4 +9,5 @@ public enum PacketType {
     AUTHENTICATION_STATUS,
     REGISTER,
     REGISTER_STATUS,
+    CLIENT_UPDATE_FRIEND_LIST,
 }
