@@ -79,12 +79,15 @@ public class NCWindow {
         // check for command
         // extract
 
+        boolean command = false;
+
         if (chatLineText.startsWith("//") && chatLineText.contains(" ")) {
             String cmd = chatLineText.substring(0, chatLineText.indexOf(" "));
             String frName = chatLineText.substring(chatLineText.lastIndexOf(" ") + 1);
 
             // add friend cmd
             if (cmd.toLowerCase().equals("//add")) {
+                command = true;
                 try {
                     NCClientApp.client.send(new ClientAddFriend(frName));
                 } catch (Exception e) {
@@ -92,18 +95,20 @@ public class NCWindow {
             }
             // remove friend
             else if (cmd.toLowerCase().equals("//rmv")) {
+                command = true;
                 try {
                     NCClientApp.client.send(new ClientRemoveFriend(frName));
                 } catch (Exception e) {
                 }
             }
         }
-        try {
-            NCFriend friend = (NCFriend) friendList.getSelectionModel().getSelectedItem();
-            if (friend != null)
-                NCClientApp.client.send(new ClientSentDirectMessage(NCClientApp.client.clientID(), friend.id, chatLineText));
-        } catch (Exception e) {
-        }
+        if (!command)
+            try {
+                NCFriend friend = (NCFriend) friendList.getSelectionModel().getSelectedItem();
+                if (friend != null)
+                    NCClientApp.client.send(new ClientSentDirectMessage(NCClientApp.client.clientID(), friend.id, chatLineText));
+            } catch (Exception e) {
+            }
         chatLine.clear();
     }
 
