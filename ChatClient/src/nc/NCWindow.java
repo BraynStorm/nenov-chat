@@ -83,14 +83,9 @@ public class NCWindow {
             }
         } else {
             try {
-                long id = -1;
-                for (NCFriend friend : NCClientApp.client.getFriendList()) {
-                    if (friend.name.equals(friendList.getSelectionModel().getSelectedItem())) {
-                        id = friend.id;
-                        break;
-                    }
-                }
-                NCClientApp.client.send(new ClientSentDirectMessage(id, chatLineText));
+                NCFriend friend = (NCFriend) friendList.getSelectionModel().getSelectedItem();
+                if (friend != null)
+                    NCClientApp.client.send(new ClientSentDirectMessage(friend.id, chatLineText));
             } catch (Exception e) {
             }
         }
