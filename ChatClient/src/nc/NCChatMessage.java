@@ -8,6 +8,7 @@ public abstract class NCChatMessage {
 
     public static class Direct extends NCChatMessage {
         private long sender;
+        private long receiver;
         private String content;
 
         public Direct(long sender, String content) {
