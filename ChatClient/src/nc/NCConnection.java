@@ -60,7 +60,6 @@ public class NCConnection extends NCBasicConnection {
                     i.remove();
                 }
             } catch (IOException ignored) {
-                processReadPackets();
                 break;
                 // Eat the exception
             }
