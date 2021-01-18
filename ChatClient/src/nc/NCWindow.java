@@ -35,7 +35,28 @@ public class NCWindow {
     }
 
     public void onSendAction() {
-        friendList.getItems().add(new NCFriend(friendList.getItems().size()));
+       // friendList.getItems().add(new NCFriend(friendList.getItems().size()));
+
+        String chatLineText = chatLine.getText();
+
+        // check for command
+        // extract
+
+        if(chatLineText.contains(" ")){
+            String cmd = chatLineText.substring(0, chatLineText.indexOf(" "));
+            String frName = chatLineText.substring(chatLineText.lastIndexOf(" ")+1);
+
+            // add friend cmd
+            if(cmd.toLowerCase().equals("//add"))
+            {
+                
+            }
+            // remove friend
+            else if (cmd.toLowerCase().equals("//rmv"))
+            {
+
+            }
+        }
     }
 
     public void chatLineOnKeyReleased() {
