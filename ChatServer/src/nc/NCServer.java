@@ -291,12 +291,11 @@ public class NCServer implements NCMessageVisitor<NCConnection> {
             String email = packet.getEmail();
             String password = packet.getPassword();
 
-            long userID = database.findUser(email, password);
-            client.clientID= userID;
+            client.clientID = database.findUser(email, password);
 
             try {
-                client.sendPacket(new AuthenticationStatus(userID));
-                if (userID == -1)
+                client.sendPacket(new AuthenticationStatus(client.clientID));
+                if (client.clientID == -1)
                     LOG.info("Authenticate - Failed");
                 else {
                     LOG.info("Authenticate - Success");
