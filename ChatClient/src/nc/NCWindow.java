@@ -32,12 +32,14 @@ public class NCWindow {
                 Thread.sleep(500);
 
                 Platform.runLater(() -> {
+                    System.out.println("update");
                     // UPDATE friend list
                     List<NCFriend> friends = client.getFriendList();
                     if(!friends.isEmpty()){
+                        System.out.println("Not empty");
                         friendList.getItems().clear();
                         for(NCFriend friend : friends){
-                            friendList.getItems().add(friend.name);
+                            friendList.getItems().add(friend);
                         }
                     }
                 });
@@ -52,8 +54,6 @@ public class NCWindow {
     }
 
     public void onSendAction() {
-        friendList.getItems().add(new NCFriend(friendList.getItems().size()));
-
         String chatLineText = chatLine.getText();
 
         // check for command

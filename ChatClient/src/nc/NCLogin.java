@@ -207,10 +207,10 @@ public class NCLogin {
             stage.setTitle("NChat");
             stage.setScene(new Scene(root));
             stage.setResizable(false);
-            stage.show();
-
             NCWindow window = loader.getController();
             stage.setOnShown(e -> window.onShow());
+            stage.show();
+
 
             labelStatus.getScene().getWindow().hide();
         } catch (IOException e1) {

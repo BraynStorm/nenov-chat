@@ -6,6 +6,7 @@ import nc.message.*;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class NCClientService implements NCMessageVisitor<NCConnection> {
     private final InetSocketAddress address = new InetSocketAddress("213.91.183.197", 5511);
@@ -146,9 +147,21 @@ public class NCClientService implements NCMessageVisitor<NCConnection> {
         }
     }
 
-
     @Override
-    public void onClientResponseClientName(NCConnection client, ClientResponseClientName packet) throws Exception {
+    public void onClientUserChangedStatus(NCConnection client, ClientUserChangedStatus packet) throws Exception {
+        System.out.println("User status changed. " + packet.userID + " " + packet.getEmail() + " " + packet.online);
+        List<NCFriend> friends = NCClientApp.client.getFriendList();
 
+        boolean found = false;
+        for (NCFriend f : friends)
+            if (f.id == packet.userID) {
+                found = true;
+                f.name = packet.getEmail();
+                f.online = packet.online;
+                break;
+            }
+
+        if (!found)
+            friends.add(new NCFriend(packet.userID, packet.getEmail(), packet.online));
     }
 }
