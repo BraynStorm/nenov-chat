@@ -36,7 +36,7 @@
       <VBox BorderPane.alignment="CENTER">
          <children>
             <Label text="Friends" />
-            <ListView fx:id="friendList" prefWidth="140.0" VBox.vgrow="ALWAYS" />
+            <ListView fx:id="friendList" prefWidth="140.0" VBox.vgrow="ALWAYS" onMouseClicked="#handleMouseClick"/>
          </children>
       </VBox>
    </left>

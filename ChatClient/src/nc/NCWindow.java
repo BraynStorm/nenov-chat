@@ -103,9 +103,8 @@ public class NCWindow {
     public void chatLineOnKeyReleased() {
     }
 
-    @FXML
-    public void handleMouseClick(MouseEvent arg0) {
+
+    public void handleMouseClick(javafx.scene.input.MouseEvent mouseEvent) {
         chatLine.setVisible(true);
-        ;
     }
 }
